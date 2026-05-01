@@ -92,14 +92,15 @@ namespace OnlineClearanceSystem.Controllers
                 }
 
                 // Sign in with cookie
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, id.ToString()),
-                    new Claim(ClaimTypes.Name,  $"{firstName} {lastName}"),
-                    new Claim(ClaimTypes.Role,  role),
-                    new Claim("FirstName",      firstName),
-                    new Claim("LastName",       lastName),
-                };
+               var claims = new List<Claim>
+{
+    new Claim(ClaimTypes.NameIdentifier, id.ToString()),
+    new Claim(ClaimTypes.Name,  $"{firstName} {lastName}"),
+    new Claim(ClaimTypes.Role,  role),
+    new Claim("FirstName",      firstName),
+    new Claim("LastName",       lastName),
+    new Claim(ClaimTypes.Surname, lastName),  // ← ADD THIS LINE
+};
 
                 var identity  = new ClaimsIdentity(
                     claims, CookieAuthenticationDefaults.AuthenticationScheme);

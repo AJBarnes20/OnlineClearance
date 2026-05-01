@@ -45,9 +45,20 @@
                             <td>@item.OrgRole</td>
                             <td style="font-weight:600;">@item.PersonName</td>
                             <td>
-                                @if (item.Status == "Cleared")     { <span class="status-approved">Cleared</span> }
-                                else if (item.Status == "Pending") { <span class="status-pending">Pending</span> }
-                                else { <button class="btn-request" onclick="requestSignature(this)"><i class="fas fa-paper-plane me-1"></i>Request</button> }
+                                @if (item.Status == "Cleared")
+                                {
+                                    <span class="status-approved">Cleared</span>
+                                }
+                                else if (item.Status == "Pending")
+                                {
+                                    <span class="status-pending">Pending</span>
+                                }
+                                else
+                                {
+                                    <button class="btn-request" onclick="requestSignature(this)">
+                                        <i class="fas fa-paper-plane me-1"></i>Request
+                                    </button>
+                                }
                             </td>
                         </tr>
                         i++;
@@ -55,25 +66,26 @@
                 }
                 else
                 {
-                    @foreach (var row in new[] {
-                        new { role="Organization Treasurer",             person="Ms. Mila Marie Villamor", status="Cleared" },
-                        new { role="Computer Laboratory Representative", person="Mr. John Mark Parangan",  status="Cleared" },
-                        new { role="Organization Adviser",               person="Ms. Sheramae Cadungog",   status="None" },
-                        new { role="Class Adviser",                      person="Mr. Rochell Belvestre",   status="None" },
-                        new { role="Campus Director",                    person="Doc. Glicerio Baguia",    status="None" },
-                    }.Select((r, i) => new { r.role, r.person, r.status, num = i + 1 }))
-                    {
-                        <tr>
-                            <td><span class="code-badge">@row.num</span></td>
-                            <td>@row.role</td>
-                            <td style="font-weight:600;">@row.person</td>
-                            <td>
-                                @if (row.status == "Cleared")      { <span class="status-approved">Cleared</span> }
-                                else if (row.status == "Pending")  { <span class="status-pending">Pending</span> }
-                                else { <button class="btn-request" onclick="requestSignature(this)"><i class="fas fa-paper-plane me-1"></i>Request</button> }
-                            </td>
-                        </tr>
-                    }
+                    <tr>
+                        <td colspan="4">
+                            <div style="display:flex;flex-direction:column;align-items:center;
+                                        justify-content:center;padding:52px 24px;text-align:center;gap:12px;">
+                                <div style="width:72px;height:72px;border-radius:50%;
+                                            background:#f0fdf4;border:2px solid #bbf7d0;
+                                            display:flex;align-items:center;justify-content:center;
+                                            font-size:28px;color:#16a34a;">
+                                    <i class="fas fa-sitemap"></i>
+                                </div>
+                                <div style="font-size:16px;font-weight:700;color:#1a1a2e;">
+                                    No organization signatories yet
+                                </div>
+                                <div style="font-size:13px;color:#888;line-height:1.7;max-width:340px;">
+                                    The Admin has not set up organization signatories
+                                    for your curriculum yet. Please check back later.
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                 }
             </tbody>
         </table>

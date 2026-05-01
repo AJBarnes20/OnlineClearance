@@ -3,6 +3,10 @@
     ViewData["Title"]      = "Clearance";
     ViewData["ActivePage"] = "Clearance";
     Layout = "~/Views/Shared/_StudentLayout.cshtml";
+
+    bool hasSubjects = Model != null && Model.Any();
+    bool hasConfirmed = TempData["ConfirmedSubjects"] != null
+                        || ViewData["HasConfirmed"] is true;
 }
 
 <div class="welcome-card mb-4">
@@ -24,6 +28,7 @@
     <div class="page-card-hd dark">
         <i class="fas fa-clipboard-list me-2"></i>SUBJECT ENROLLED
     </div>
+
     <div class="table-responsive">
         <table class="data-table">
             <thead>
@@ -36,9 +41,9 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Model != null && Model.Any())
+                @if (hasSubjects)
                 {
-                    @foreach (var item in Model)
+                    @foreach (var item in Model!)
                     {
                         <tr>
                             <td><span class="code-badge">@item.MisCode</span></td>
@@ -46,43 +51,85 @@
                             <td>@item.Description</td>
                             <td>@item.InstructorName</td>
                             <td>
-                                @if (item.Status == "Cleared")       { <span class="status-approved">Cleared</span> }
-                                else if (item.Status == "Pending")   { <span class="status-pending">Pending</span> }
-                                else { <button class="btn-request" onclick="requestSignature(this)"><i class="fas fa-paper-plane me-1"></i>Request</button> }
+                                @if (item.Status == "Cleared")
+                                {
+                                    <span class="status-approved">Cleared</span>
+                                }
+                                else if (item.Status == "Pending")
+                                {
+                                    <span class="status-pending">Pending</span>
+                                }
+                                else
+                                {
+                                    <button class="btn-request" onclick="requestSignature(this)">
+                                        <i class="fas fa-paper-plane me-1"></i>Request
+                                    </button>
+                                }
                             </td>
                         </tr>
                     }
                 }
                 else
                 {
-                    @foreach (var row in new[] {
-                        new { code="GT-53", subj="GEC – TCW",  desc="The Contemporary World",                    inst="Ms. Dina Piedad",      status="Cleared" },
-                        new { code="GT-54", subj="PC 223",     desc="Integrative Programming and Technologies 1", inst="Mr. Ian Comision",      status="Cleared" },
-                        new { code="GT-55", subj="PC 224",     desc="Networking 1",                               inst="Mr. Rochell Belvestre", status="None" },
-                        new { code="GT-56", subj="CC 225",     desc="Information Management (Lec)",               inst="Doc. Glicerio Baguia",  status="None" },
-                        new { code="GT-57", subj="CC 225 L",   desc="Information Management (Lab)",               inst="Doc. Glicerio Baguia",  status="None" },
-                        new { code="GT-58", subj="P Elec 3",   desc="Platform Technology",                        inst="Mr. Ian Comision",      status="Cleared" },
-                        new { code="GT-59", subj="AP 3",       desc="ASP .NET",                                   inst="Mr. Ian Comision",      status="Cleared" },
-                        new { code="GT-60", subj="PATHFIT 4",  desc="Physical Activities Towards Health and Fitness", inst="Ms. Sheramae Cadungog", status="Cleared" },
-                    })
-                    {
-                        <tr>
-                            <td><span class="code-badge">@row.code</span></td>
-                            <td style="font-weight:600;">@row.subj</td>
-                            <td>@row.desc</td>
-                            <td>@row.inst</td>
-                            <td>
-                                @if (row.status == "Cleared")      { <span class="status-approved">Cleared</span> }
-                                else if (row.status == "Pending")  { <span class="status-pending">Pending</span> }
-                                else { <button class="btn-request" onclick="requestSignature(this)"><i class="fas fa-paper-plane me-1"></i>Request</button> }
-                            </td>
-                        </tr>
-                    }
+                    <!-- EMPTY STATE -->
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </div>
+                                <div class="empty-title">No subjects enrolled yet</div>
+                                <div class="empty-desc">
+                                    You haven't confirmed your subjects yet.<br/>
+                                    Go to <strong>Subjects Offered</strong> to select
+                                    and confirm your enrolled subjects first.
+                                </div>
+                                <a href="/Student/SubjectsOffered" class="btn-green"
+                                   style="display:inline-flex;align-items:center;
+                                          gap:8px;padding:10px 28px;
+                                          text-decoration:none;margin-top:4px;">
+                                    <i class="fas fa-book-open"></i>
+                                    Go to Subjects Offered
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+@section Styles {
+<style>
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 52px 24px;
+        text-align: center;
+        gap: 12px;
+    }
+    .empty-icon {
+        width: 72px; height: 72px;
+        border-radius: 50%;
+        background: #f0fdf4;
+        border: 2px solid #bbf7d0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px; color: #16a34a;
+        margin-bottom: 4px;
+    }
+    .empty-title {
+        font-size: 16px; font-weight: 700;
+        color: #1a1a2e;
+    }
+    .empty-desc {
+        font-size: 13px; color: #888;
+        line-height: 1.7; max-width: 340px;
+    }
+</style>
+}
 
 @section Scripts {
 <script>

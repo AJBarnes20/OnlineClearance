@@ -176,9 +176,13 @@
             <a href="/Student/DownloadPdf"  class="nav-link-item @(activePage=="DownloadPdf"?"active":"")"><i class="fas fa-file-download"></i><span>Download PDF</span></a>
 
             <div class="sb-footer">
-                <form asp-controller="Account" asp-action="Logout" method="post">
-                    <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i><span>Log-out</span></button>
-                </form>
+                <!-- ✅ CORRECT -->
+<form asp-controller="Home" asp-action="Logout" method="post">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn-logout">
+        <i class="fas fa-sign-out-alt"></i><span>Log-out</span>
+    </button>
+</form>
                 <div class="sb-year">A.Y. 2025 – 2026</div>
             </div>
         </nav>

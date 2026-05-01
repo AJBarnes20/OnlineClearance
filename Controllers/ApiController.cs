@@ -1,14 +1,3 @@
-// ============================================================
-// Controllers/ApiController.cs
-// This controller returns JSON data for the mobile app.
-// The mobile app calls these URLs and displays the data.
-//
-// HOW API WORKS:
-//   Mobile page calls → /api/login (POST) → returns JSON
-//   Mobile page calls → /api/student/clearance → returns JSON
-//   etc.
-// ============================================================
-
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;           // ← fixes MySql error here
 using OnlineClearanceSystem.Models;
