@@ -1,0 +1,67 @@
+@model IEnumerable<OnlineClearanceSystem.Models.ClearanceRequest>
+@{
+    ViewData["Title"]      = "Subject Clearance";
+    ViewData["ActivePage"] = "SubjectClearance";
+    Layout = "~/Views/Shared/_InstructorLayout.cshtml";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h5 class="fw-bold mb-0" style="color:#1a1a2e;">Subject Clearance</h5>
+</div>
+
+<div class="page-card">
+    <div class="page-card-hd dark"><i class="fas fa-clipboard-check me-2"></i>Pending Requests</div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr><th>CODE</th><th>SUBJECT</th><th>DESCRIPTION</th><th>REQUESTED BY</th><th>ACTION</th></tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><span class="code-badge">@item.MisCode</span></td>
+                            <td style="font-weight:600;">@item.SubjectCode</td>
+                            <td>@item.Description</td>
+                            <td>
+                                <div style="font-weight:600;font-size:13px;">@item.StudentName</div>
+                                <div style="font-size:11px;color:#888;">@item.StudentCourse</div>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <form asp-action="Approve" asp-controller="Instructor" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-approve"><i class="fas fa-check me-1"></i>Approve</button>
+                                    </form>
+                                    <form asp-action="Decline" asp-controller="Instructor" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn-decline"><i class="fas fa-times me-1"></i>Decline</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" style="padding:40px;text-align:center;color:#888;">
+                        <i class="fas fa-clipboard-check" style="font-size:28px;color:#ddd;display:block;margin-bottom:10px;"></i>
+                        No pending clearance requests.
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

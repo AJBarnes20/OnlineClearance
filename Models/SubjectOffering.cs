@@ -21,5 +21,20 @@ namespace OnlineClearanceSystem.Models
         // Navigation
         [ForeignKey("SubjectId")]
         public Subject? Subject { get; set; }
+
+
+        [Display(Name = "MIS Code")]
+        public string MisCode { get; set; } = string.Empty;
+
+        [Display(Name = "Subject Code")]
+        public string SubjectCode { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+
+        [Display(Name = "Lab Unit")]
+        public int LabUnit { get; set; }
+
+        [Display(Name = "Lec Unit")]
+        public int LecUnit { get; set; }
     }
 }

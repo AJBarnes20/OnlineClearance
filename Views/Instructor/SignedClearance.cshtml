@@ -1,0 +1,70 @@
+@model IEnumerable<OnlineClearanceSystem.Models.SignedClearance>
+@{
+    ViewData["Title"]      = "Signed Clearance";
+    ViewData["ActivePage"] = "SignedClearance";
+    Layout = "~/Views/Shared/_InstructorLayout.cshtml";
+    string currentFilter = ViewData["Filter"]?.ToString() ?? "all";
+}
+
+<div class="page-card">
+    <div class="page-card-body p-3">
+        <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+            <button class="filter-btn" style="background:#28a745;color:white;border-color:#28a745;pointer-events:none;">
+                <i class="fas fa-file-signature me-1"></i>Signed Clearance
+            </button>
+            <div class="filter-bar">
+                <a href="?filter=all"
+                   class="filter-btn"
+                   style="@(currentFilter == "all" ? "background:#1a4731;color:white;border-color:#1a4731;" : "")">All</a>
+                <a href="?filter=approved"
+                   class="filter-btn"
+                   style="@(currentFilter == "approved" ? "background:#28a745;color:white;border-color:#28a745;" : "")">Approved</a>
+                <a href="?filter=rejected"
+                   class="filter-btn"
+                   style="@(currentFilter == "rejected" ? "background:#dc3545;color:white;border-color:#dc3545;" : "")">Rejected</a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr><th>MIS CODE</th><th>SUBJECT CODE</th><th>DESCRIPTION</th><th>REQUESTED</th><th>ACTION</th></tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><span class="code-badge">@item.MisCode</span></td>
+                                <td style="font-weight:600;">@item.SubjectCode</td>
+                                <td>@item.Description</td>
+                                <td>
+                                    <div style="font-weight:600;">@item.StudentName</div>
+                                    <div style="font-size:11px;color:#888;">@item.StudentCourse</div>
+                                </td>
+                                <td>
+                                    @if (item.Status == "Approved")
+                                    {
+                                        <span class="status-approved">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-declined">Declined</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="5" style="padding:40px;text-align:center;color:#888;">
+                            <i class="fas fa-file-signature" style="font-size:28px;color:#ddd;display:block;margin-bottom:10px;"></i>
+                            No signed clearances yet.
+                        </td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

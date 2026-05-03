@@ -1,0 +1,45 @@
+@model IEnumerable<OnlineClearanceSystem.Models.AdminSubjectItem>
+@{
+    ViewData["Title"] = "Subjects";
+    ViewData["ActivePage"] = "Subjects";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h5 class="fw-bold mb-3" style="color:#1a1a2e;">Subjects</h5>
+
+<div class="page-card">
+    <div class="page-card-hd dark"><i class="fas fa-book me-2"></i>All Subjects</div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th><th>SUBJECT CODE</th><th>TITLE</th>
+                    <th style="text-align:center;">LEC UNITS</th>
+                    <th style="text-align:center;">LAB UNITS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td>@s.Id</td>
+                            <td><span class="code-badge">@s.SubjectCode</span></td>
+                            <td style="font-weight:600;">@s.Title</td>
+                            <td style="text-align:center;font-weight:700;">@s.LecUnits</td>
+                            <td style="text-align:center;font-weight:700;">@s.LabUnits</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" style="padding:40px;text-align:center;color:#888;">
+                        <i class="fas fa-book" style="font-size:28px;color:#ddd;display:block;margin-bottom:10px;"></i>
+                        No subjects yet.
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

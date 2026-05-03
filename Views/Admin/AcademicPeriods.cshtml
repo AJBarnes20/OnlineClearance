@@ -1,0 +1,46 @@
+@model IEnumerable<OnlineClearanceSystem.Models.AcademicPeriodItem>
+@{
+    ViewData["Title"] = "Academic Periods";
+    ViewData["ActivePage"] = "AcademicPeriods";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h5 class="fw-bold mb-3" style="color:#1a1a2e;">Academic Periods</h5>
+
+<div class="page-card">
+    <div class="page-card-hd dark"><i class="fas fa-calendar-alt me-2"></i>All Academic Periods</div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th><th>ACADEMIC YEAR</th><th>SEMESTER</th>
+                    <th style="text-align:center;">STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var ap in Model)
+                    {
+                        <tr>
+                            <td>@ap.Id</td>
+                            <td style="font-weight:600;">@ap.AcademicYear</td>
+                            <td>@ap.Semester</td>
+                            <td style="text-align:center;">
+                                @if (ap.IsActive) { <span class="active-badge">Active</span> }
+                                else { <span style="color:#888;font-size:12px;">Inactive</span> }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="4" style="padding:40px;text-align:center;color:#888;">
+                        <i class="fas fa-calendar-alt" style="font-size:28px;color:#ddd;display:block;margin-bottom:10px;"></i>
+                        No academic periods yet.
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

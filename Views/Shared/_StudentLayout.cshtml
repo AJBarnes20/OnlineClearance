@@ -153,7 +153,7 @@
         </div>
         <div class="header-right">
             <span class="course-badge">@userCourse – @userYear</span>
-            <button class="notif-btn" title="Notifications"><i class="fas fa-bell"></i><span class="notif-dot"></span></button>
+            @await Html.PartialAsync("_NotificationBell") 
         </div>
     </header>
 
