@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Admin\\OnlineClearanceSystem\\OnlineClearanceSystem.csproj": {}
+    "C:\\Users\\Admin\\OnlineClearance\\OnlineClearanceSystem.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Admin\\OnlineClearanceSystem\\OnlineClearanceSystem.csproj": {
+    "C:\\Users\\Admin\\OnlineClearance\\OnlineClearanceSystem.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\OnlineClearanceSystem\\OnlineClearanceSystem.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\OnlineClearance\\OnlineClearanceSystem.csproj",
         "projectName": "OnlineClearanceSystem",
-        "projectPath": "C:\\Users\\Admin\\OnlineClearanceSystem\\OnlineClearanceSystem.csproj",
+        "projectPath": "C:\\Users\\Admin\\OnlineClearance\\OnlineClearanceSystem.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\OnlineClearanceSystem\\obj\\",
+        "outputPath": "C:\\Users\\Admin\\OnlineClearance\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"

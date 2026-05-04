@@ -1,0 +1,322 @@
+@* ═══════════════════════════════════════════════════════
+   INSTRUCTOR LIST  –  /Admin/Instructor
+   Empty state: instructors register themselves;
+   admin manages organization signatories only.
+═══════════════════════════════════════════════════════ *@
+@{
+    ViewData["Title"]      = "Instructor";
+    ViewData["ActivePage"] = "Instructor";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-title">Instructor</div>
+
+<!-- STATS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div>
+                <div class="stat-num">0</div>
+                <div class="stat-label">Total Instructors</div>
+                <div class="stat-sub">All Departments</div>
+            </div>
+            <div class="stat-icon-wrap si-blue"><i class="fas fa-users"></i></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div>
+                <div class="stat-num">0</div>
+                <div class="stat-label">Organization Signatories</div>
+                <div class="stat-sub">Active Roles</div>
+            </div>
+            <div class="stat-icon-wrap si-green"><i class="fas fa-user-check"></i></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card"
+             id="assign-toggle-card"
+             onclick="toggleAssignPanel()"
+             style="cursor:pointer;transition:border-color 0.2s,background 0.2s;"
+             title="Click to assign organization positions">
+            <div>
+                <div class="stat-label" style="margin-bottom:8px;">Assign Organization Position</div>
+                <div style="font-size:11px;color:var(--muted);" id="assign-toggle-hint">Click to manage</div>
+            </div>
+            <div class="stat-icon-wrap si-purple"><i class="fas fa-user-plus"></i></div>
+        </div>
+    </div>
+</div>
+
+<!-- INSTRUCTOR CARDS — EMPTY STATE -->
+<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">
+    ALL INSTRUCTOR ACCOUNT LIST
+</div>
+
+<div class="panel" id="instructor-list">
+    <div style="width:72px;height:72px;border-radius:50%;background:rgba(66,153,225,0.10);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+        <i class="fas fa-user-clock" style="font-size:30px;color:#4299e1;opacity:0.7;"></i>
+    </div>
+    <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">
+        No Instructors Registered Yet
+    </div>
+    <div style="font-size:13px;color:var(--muted);max-width:420px;margin:0 auto;line-height:1.6;">
+        Instructor accounts will appear here once they complete their registration.
+        As admin, you can assign organization signatory roles using the
+        <strong style="color:var(--text);">Assign Organization Position</strong> card above.
+    </div>
+</div>
+
+<!-- ASSIGN ORG SIGNATORIES SECTION — hidden by default -->
+<div class="mt-4 panel" id="assign-panel" style="display:none;">
+    <div style="background:var(--tbl-hd-navy);padding:13px 18px;font-size:14px;font-weight:700;color:white;display:flex;align-items:center;justify-content:space-between;">
+        <span><i class="fas fa-sitemap me-2"></i>Assign Instructor Organization Signatories</span>
+        <button onclick="toggleAssignPanel()"
+                style="background:rgba(255,255,255,0.12);border:none;color:white;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;">
+            <i class="fas fa-times me-1"></i>Close
+        </button>
+    </div>
+
+    <div style="padding:20px;">
+
+        <!-- Admin notice -->
+        <div style="background:rgba(66,153,225,0.08);border:1px solid rgba(66,153,225,0.25);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--muted);display:flex;align-items:flex-start;gap:10px;">
+            <i class="fas fa-info-circle" style="color:#4299e1;margin-top:2px;flex-shrink:0;"></i>
+            <span>
+                Only registered instructors can be assigned as signatories.
+                Instructors must complete their registration before they can be added here.
+                As admin, you are solely responsible for assigning and managing these roles.
+            </span>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <label class="dark-label">Name of Instructor</label>
+                <input class="dark-input" type="text" id="input-name" placeholder="Enter instructor name" />
+            </div>
+            <div class="col-12">
+                <label class="dark-label">Employee ID</label>
+                <input class="dark-input" type="text" id="input-eid" placeholder="Enter employee ID" />
+            </div>
+            <div class="col-12">
+                <label class="dark-label">Position</label>
+                <input class="dark-input" type="text" id="input-pos" placeholder="e.g. Campus Director, SSG Adviser" />
+            </div>
+        </div>
+
+        <button class="btn-blue-sm" onclick="addSignatory()">
+            <i class="fas fa-plus me-2"></i>Add Signatory
+        </button>
+    </div>
+
+    <div style="background:var(--tbl-hd-navy);padding:11px 18px;font-size:13px;font-weight:700;color:white;">
+        List of Instructor Signatories
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Employee ID</th>
+                    <th>Position</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="signatory-tbody">
+                <!-- Rows injected by JS -->
+            </tbody>
+        </table>
+
+        <!-- Empty state for signatory table -->
+        <div id="signatory-empty"
+             style="padding:36px 24px;text-align:center;color:var(--muted);font-size:13px;">
+            <i class="fas fa-list-ul" style="font-size:24px;opacity:0.3;display:block;margin-bottom:10px;"></i>
+            No signatories assigned yet. Use the form above to add one.
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let instructors = [];
+    let signatories = [];
+    let assignOpen  = false;
+
+    // ── Load instructors from DB ──────────────────────
+    async function loadInstructors() {
+        try {
+            const res   = await fetch('/api/admin/instructors');
+            instructors = await res.json();
+        } catch { instructors = []; }
+        renderInstructors();
+    }
+
+    function renderInstructors() {
+        const panel    = document.querySelector('.panel[style*="padding:56px"]') ??
+                         document.querySelector('.panel');
+        const countEls = document.querySelectorAll('.stat-num');
+        if (countEls[0]) countEls[0].textContent = instructors.length;
+
+        const list = document.getElementById('instructor-list');
+        if (!list) return;
+
+        if (instructors.length === 0) {
+            list.innerHTML = `
+                <div style="padding:56px 24px;text-align:center;">
+                    <div style="width:72px;height:72px;border-radius:50%;background:rgba(66,153,225,0.10);
+                                display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+                        <i class="fas fa-user-clock" style="font-size:30px;color:#4299e1;opacity:0.7;"></i>
+                    </div>
+                    <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">
+                        No Instructors Registered Yet
+                    </div>
+                    <div style="font-size:13px;color:var(--muted);max-width:420px;margin:0 auto;line-height:1.6;">
+                        Instructor accounts will appear here once they complete registration.
+                    </div>
+                </div>`;
+            return;
+        }
+
+        list.innerHTML = `
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Name</th><th>Employee ID</th>
+                            <th>Status</th><th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${instructors.map((inst, i) => `
+                            <tr>
+                                <td style="color:var(--muted);">${String(i+1).padStart(2,'0')}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="user-avatar-sm" style="background:#4299e1;">
+                                            ${escHtml(inst.name.charAt(0))}
+                                        </div>
+                                        ${escHtml(inst.name)}
+                                    </div>
+                                </td>
+                                <td style="color:var(--muted);">${escHtml(inst.employeeId)}</td>
+                                <td><span class="badge-active">Active</span></td>
+                                <td>
+                                    <a href="/Admin/InstructorDetail?id=${inst.id}"
+                                       style="background:#4299e1;color:#fff;border:none;border-radius:6px;
+                                              padding:5px 12px;font-size:12px;font-weight:600;
+                                              cursor:pointer;text-decoration:none;">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                </td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+        if (countEls[1]) countEls[1].textContent = signatories.length;
+    }
+
+    // ── Load signatories from DB ──────────────────────
+    async function loadSignatories() {
+        try {
+            const res   = await fetch('/api/admin/org-signatories');
+            signatories = await res.json();
+        } catch { signatories = []; }
+        renderSignatories();
+    }
+
+    function renderSignatories() {
+        const tbody = document.getElementById('signatory-tbody');
+        const empty = document.getElementById('signatory-empty');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (signatories.length === 0) { empty.style.display = 'block'; return; }
+        empty.style.display = 'none';
+        signatories.forEach((s, i) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="color:var(--muted);">${String(i+1).padStart(2,'00')}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="user-avatar-sm" style="background:#4299e1;">
+                            ${escHtml(s.name.charAt(0))}
+                        </div>
+                        ${escHtml(s.name)}
+                    </div>
+                </td>
+                <td style="color:var(--muted);">${escHtml(s.eid)}</td>
+                <td>${escHtml(s.pos)}</td>
+                <td>
+                    <button onclick="removeSignatory(${s.id})"
+                        style="background:rgba(229,62,62,0.12);border:none;color:#e53e3e;
+                               border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;">
+                        <i class="fas fa-trash-alt me-1"></i>Remove
+                    </button>
+                </td>`;
+            tbody.appendChild(row);
+        });
+    }
+
+    async function addSignatory() {
+        const name = document.getElementById('input-name').value.trim();
+        const eid  = document.getElementById('input-eid').value.trim();
+        const pos  = document.getElementById('input-pos').value.trim();
+        if (!name || !eid || !pos) {
+            alert('Please fill in all fields.');
+            return;
+        }
+        try {
+            const res  = await fetch('/api/admin/org-signatories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, eid, pos })
+            });
+            const data = await res.json();
+            if (data.success) {
+                signatories.push({ id: data.id, name, eid, pos });
+                renderSignatories();
+                document.getElementById('input-name').value = '';
+                document.getElementById('input-eid').value  = '';
+                document.getElementById('input-pos').value  = '';
+            }
+        } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    async function removeSignatory(id) {
+        if (!confirm('Remove this signatory?')) return;
+        try {
+            await fetch(`/api/admin/org-signatories/${id}`, { method: 'DELETE' });
+            signatories = signatories.filter(s => s.id !== id);
+            renderSignatories();
+        } catch { }
+    }
+
+    // ── Toggle assign panel ───────────────────────────
+    function toggleAssignPanel() {
+        assignOpen = !assignOpen;
+        const panel = document.getElementById('assign-panel');
+        const card  = document.getElementById('assign-toggle-card');
+        const hint  = document.getElementById('assign-toggle-hint');
+        if (assignOpen) {
+            panel.style.display    = 'block';
+            card.style.borderColor = 'var(--purple, #9f7aea)';
+            card.style.background  = 'rgba(159,122,234,0.10)';
+            hint.textContent       = 'Click to close';
+            setTimeout(() => panel.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+        } else {
+            panel.style.display    = 'none';
+            card.style.borderColor = '';
+            card.style.background  = '';
+            hint.textContent       = 'Click to manage';
+        }
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    loadInstructors();
+    loadSignatories();
+</script>
+}

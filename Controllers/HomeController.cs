@@ -232,6 +232,7 @@ namespace OnlineClearanceSystem.Controllers
                 "Admin"      => RedirectToAction("Dashboard", "Admin"),
                 "Instructor" => RedirectToAction("Dashboard", "Instructor"),
                 "Student"    => RedirectToAction("Dashboard", "Student"),
+                "Staff"    => RedirectToAction("Dashboard", "Staff"),
                 _            => RedirectToAction(nameof(Login))
             };
         }
