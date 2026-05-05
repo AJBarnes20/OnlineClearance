@@ -738,11 +738,16 @@ public IActionResult UpdateOffering(int id, [FromBody] JsonElement body)
             catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
         }
 
-        // ══════════════════════════════════════════════════
-        // API — INSTRUCTORS
-        // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// API — INSTRUCTORS
+// ══════════════════════════════════════════════════
+public IActionResult InstructorAssign()
+{
+    ViewData["SubView"] = "assign";
+    return View("Instructor");
+}
 
-        [HttpGet("/api/admin/instructors")]
+[HttpGet("/api/admin/instructors")]
 public IActionResult GetInstructors()
 {
     var items = new List<object>();
@@ -751,29 +756,62 @@ public IActionResult GetInstructors()
         using var conn = DbHelper.GetConnection(_config);
         conn.Open();
         var cmd = new MySqlCommand(@"
-            SELECT u.id,
-                   CONCAT(u.first_name,' ',u.last_name) AS name,
-                   u.username,
-                   COALESCE(sig.employee_id, '—') AS employee_id,
-                   u.created_at
-            FROM users u
-            LEFT JOIN signatories sig ON sig.user_id = u.id
-            WHERE u.role='Instructor' AND u.is_active=1
-            ORDER BY u.first_name", conn);
+            SELECT id,
+                   CONCAT(first_name, ' ', last_name) AS name,
+                   COALESCE(id_number, '—')           AS employeeId,
+                   created_at                         AS joinedDate
+            FROM users
+            WHERE role = 'Instructor' AND is_active = 1
+            ORDER BY first_name", conn);
         using var r = cmd.ExecuteReader();
         while (r.Read())
-            items.Add(new
-            {
+            items.Add(new {
                 id         = r.GetInt32("id"),
                 name       = r.GetString("name"),
-                username   = r.GetString("username"),
-                employeeId = r.GetString("employee_id"),
-                joinedDate = r.GetDateTime("created_at").ToString("MMM d, yyyy")
+                employeeId = r.GetString("employeeId"),
+                joinedDate = r.GetDateTime("joinedDate").ToString("MMMM d, yyyy")
             });
     }
-    catch { }
+    catch (Exception ex) { return Ok(new { error = ex.Message }); }
     return Ok(items);
 }
+
+[HttpGet("/api/admin/instructors/{id}")]
+public IActionResult GetInstructorDetail(int id)
+{
+    try
+    {
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(@"
+            SELECT id,
+                   first_name                     AS firstName,
+                   COALESCE(middle_initial, '—')  AS middleName,
+                   last_name                      AS lastName,
+                   COALESCE(id_number, '—')       AS employeeId,
+                   COALESCE(e_signature_path, '') AS signaturePath
+            FROM users
+            WHERE id = @id AND role = 'Instructor'", conn);
+        cmd.Parameters.AddWithValue("@id", id);
+
+        using var r = cmd.ExecuteReader();
+        if (!r.Read())
+            return Ok(new { error = "Instructor not found." });
+
+        return Ok(new {
+            firstName     = r.IsDBNull(r.GetOrdinal("firstName"))     ? "—" : r.GetString("firstName"),
+            middleName    = r.IsDBNull(r.GetOrdinal("middleName"))    ? "—" : r.GetString("middleName"),
+            lastName      = r.IsDBNull(r.GetOrdinal("lastName"))      ? "—" : r.GetString("lastName"),
+            employeeId    = r.IsDBNull(r.GetOrdinal("employeeId"))    ? "—" : r.GetString("employeeId"),
+            section       = "—",
+            position      = "—",
+            signaturePath = r.IsDBNull(r.GetOrdinal("signaturePath")) ? ""  : r.GetString("signaturePath")
+        });
+    }
+    catch (Exception ex) { return Ok(new { error = ex.Message }); }
+}
+
+
         // ══════════════════════════════════════════════════
         // API — STUDENTS
         // ══════════════════════════════════════════════════
@@ -1054,71 +1092,89 @@ public IActionResult DeleteStudentSignatory(int id)
         // API — ORG SIGNATORIES
         // ══════════════════════════════════════════════════
 
-        [HttpGet("/api/admin/org-signatories")]
-        public IActionResult GetOrgSignatories()
-        {
-            var items = new List<object>();
-            try
-            {
-                using var conn = DbHelper.GetConnection(_config);
-                conn.Open();
-                var cmd = new MySqlCommand(@"
-                    SELECT o.id, CONCAT(u.first_name,' ',u.last_name) AS name,
-                           sig.employee_id, o.position_title
-                    FROM organizations o
-                    JOIN signatories sig ON sig.employee_id = o.org_signatory
-                    JOIN users u ON u.id = sig.user_id
-                    ORDER BY o.id", conn);
-                using var r = cmd.ExecuteReader();
-                while (r.Read())
-                    items.Add(new
-                    {
-                        id   = r.GetInt32("id"),
-                        name = r.GetString("name"),
-                        eid  = r.GetString("employee_id"),
-                        pos  = r.IsDBNull(r.GetOrdinal("position_title")) ? "—" : r.GetString("position_title")
-                    });
-            }
-            catch { }
-            return Ok(items);
-        }
-
         [HttpPost("/api/admin/org-signatories")]
-        public IActionResult CreateOrgSignatory([FromBody] JsonElement body)
+public IActionResult CreateOrgSignatory([FromBody] JsonElement body)
+{
+    try
+    {
+        var userId = body.GetProperty("userId").GetInt32();
+        var eid    = body.GetProperty("eid").GetString() ?? "";
+        var pos    = body.GetProperty("pos").GetString() ?? "";
+
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+
+        // Step 1 — Check if instructor already in signatories table
+        var checkCmd = new MySqlCommand(
+            "SELECT employee_id FROM signatories WHERE user_id = @uid LIMIT 1", conn);
+        checkCmd.Parameters.AddWithValue("@uid", userId);
+        var existingEid = checkCmd.ExecuteScalar()?.ToString();
+
+        // Step 2 — If not, insert into signatories first
+        if (string.IsNullOrEmpty(existingEid))
         {
-            try
-            {
-                var eid = body.GetProperty("eid").GetString() ?? "";
-                var pos = body.GetProperty("pos").GetString() ?? "";
-                using var conn = DbHelper.GetConnection(_config);
-                conn.Open();
-                var cmd = new MySqlCommand(@"
-                    INSERT INTO organizations (org_name, org_signatory, position_title)
-                    VALUES (@n, @eid, @pos);
-                    SELECT LAST_INSERT_ID();", conn);
-                cmd.Parameters.AddWithValue("@n",   pos);
-                cmd.Parameters.AddWithValue("@eid", eid);
-                cmd.Parameters.AddWithValue("@pos", pos);
-                var newId = Convert.ToInt32(cmd.ExecuteScalar());
-                return Ok(new { success = true, id = newId });
-            }
-            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+            // Use their id_number as employee_id, or generate one
+            var getEid = new MySqlCommand(
+                "SELECT COALESCE(id_number, CONCAT('EMP-', id)) FROM users WHERE id = @uid", conn);
+            getEid.Parameters.AddWithValue("@uid", userId);
+            existingEid = getEid.ExecuteScalar()?.ToString() ?? eid;
+
+            var insertSig = new MySqlCommand(
+                "INSERT INTO signatories (user_id, employee_id) VALUES (@uid, @eid)", conn);
+            insertSig.Parameters.AddWithValue("@uid", userId);
+            insertSig.Parameters.AddWithValue("@eid", existingEid);
+            insertSig.ExecuteNonQuery();
         }
 
-        [HttpDelete("/api/admin/org-signatories/{id}")]
-        public IActionResult DeleteOrgSignatory(int id)
-        {
-            try
-            {
-                using var conn = DbHelper.GetConnection(_config);
-                conn.Open();
-                var cmd = new MySqlCommand("DELETE FROM organizations WHERE id=@id", conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                cmd.ExecuteNonQuery();
-                return Ok(new { success = true });
-            }
-            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
-        }
+        // Step 3 — Now insert into organizations using the valid employee_id
+        var cmd = new MySqlCommand(@"
+            INSERT INTO organizations (org_name, org_signatory, position_title)
+            VALUES (@n, @eid, @pos);
+            SELECT LAST_INSERT_ID();", conn);
+        cmd.Parameters.AddWithValue("@n",   pos);
+        cmd.Parameters.AddWithValue("@eid", existingEid);
+        cmd.Parameters.AddWithValue("@pos", pos);
+        var newId = Convert.ToInt32(cmd.ExecuteScalar());
+
+        return Ok(new { success = true, id = newId });
+    }
+    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+}
+[HttpGet("/api/admin/org-signatories")]
+public IActionResult GetOrgSignatories()
+{
+    var items = new List<object>();
+    try
+    {
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(@"
+            SELECT 
+                o.id,
+                u.id                                    AS userId,
+                CONCAT(u.first_name,' ',u.last_name)   AS name,
+                COALESCE(sig.employee_id, '—')         AS eid,
+                COALESCE(o.position_title, '—')        AS pos
+            FROM organizations o
+            JOIN signatories sig ON sig.employee_id = o.org_signatory
+            JOIN users u         ON u.id            = sig.user_id
+            ORDER BY o.id", conn);
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+            items.Add(new {
+                id     = r.GetInt32("id"),
+                userId = r.GetInt32("userId"),
+                name   = r.GetString("name"),
+                eid    = r.GetString("eid"),
+                pos    = r.GetString("pos")
+            });
+    }
+    catch (Exception ex) 
+    { 
+        Console.WriteLine("GetOrgSignatories error: " + ex.Message);
+    }
+    return Ok(items);
+}
 
         // ══════════════════════════════════════════════════
         // FORM POSTS (non-API)
