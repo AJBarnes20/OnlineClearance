@@ -43,6 +43,7 @@ namespace OnlineClearanceSystem.Models
         public string ClassAdviser  { get; set; } = "";
         public string Password      { get; set; } = "";
         public List<string> Positions { get; set; } = new();
+        public string? SignatureBase64 { get; set; }
 
         public string FullName =>
             $"{FirstName} {(string.IsNullOrEmpty(MiddleInitial) ? "" : MiddleInitial + ". ")}{LastName}".Trim();

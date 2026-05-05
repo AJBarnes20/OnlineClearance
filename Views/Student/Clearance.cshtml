@@ -131,10 +131,43 @@
 </style>
 }
 
+@Html.AntiForgeryToken()
+
 @section Scripts {
 <script>
 function requestSignature(btn) {
-    btn.parentElement.innerHTML = '<span class="status-pending">Pending</span>';
+    const row     = btn.closest('tr');
+    const misCode = row.querySelector('.code-badge')?.textContent?.trim();
+    if (!misCode) return;
+
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+
+    fetch('/Student/RequestSubjectSignature', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token
+        },
+        body: JSON.stringify({ misCode: misCode })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            btn.parentElement.innerHTML = '<span class="status-pending">Pending</span>';
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Request';
+            alert('Error: ' + (data.error ?? 'Unknown error'));
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Request';
+        alert('Request failed. Please try again.');
+    });
 }
 </script>
 }

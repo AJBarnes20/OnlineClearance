@@ -7,11 +7,13 @@ namespace OnlineClearanceSystem.Models
         public string MiddleInitial { get; set; } = "";
         public string LastName      { get; set; } = "";
         public string Suffix        { get; set; } = "";
-        public string Course        { get; set; } = "BSIT";
-        public string YearLevel     { get; set; } = "2nd Year";
-        public string Section       { get; set; } = "A";
+        public string Course        { get; set; } = "";
+        public string YearLevel     { get; set; } = "";
+        public string Section       { get; set; } = "";
         public string Username      { get; set; } = "";
         public string Password      { get; set; } = "";
+
+        public List<string> AvailableCourses { get; set; } = [];
 
         // Computed
         public string FullName =>

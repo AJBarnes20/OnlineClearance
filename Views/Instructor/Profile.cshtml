@@ -5,6 +5,8 @@
     Layout = "~/Views/Shared/_InstructorLayout.cshtml";
 }
 
+@Html.AntiForgeryToken()
+
 <!-- PROFILE HEADER -->
 <div style="background:var(--green);border-radius:12px;padding:22px 28px;display:flex;align-items:center;gap:20px;margin-bottom:20px;">
     <div style="position:relative;">
@@ -349,19 +351,44 @@
     }
 
     // ── SET SAVED SIGNATURE ──
+    const _csrfToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
     function setSavedSignature(dataUrl) {
         const preview     = document.getElementById('saved-sig-preview');
         const placeholder = document.getElementById('saved-sig-placeholder');
         const status      = document.getElementById('sig-status');
         const timestamp   = document.getElementById('sig-timestamp');
 
-        preview.src          = dataUrl;
-        preview.style.display = '';
+        preview.src               = dataUrl;
+        preview.style.display     = '';
         placeholder.style.display = 'none';
-        status.innerHTML     = '<i class="fas fa-check-circle me-1"></i>Verified & Active';
-        status.style.cssText = 'background:#e6f4ea;color:var(--green-accent);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;';
-        timestamp.textContent = 'Timestamps, ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        status.innerHTML          = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+        status.style.cssText      = 'background:#f8f9fa;color:#888;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;';
+
+        fetch('/Instructor/SaveSignature', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': _csrfToken },
+            body: JSON.stringify({ signatureData: dataUrl })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                status.innerHTML  = '<i class="fas fa-check-circle me-1"></i>Verified & Active';
+                status.style.cssText = 'background:#e6f4ea;color:var(--green-accent);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;';
+                timestamp.textContent = 'Saved at ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            } else {
+                status.innerHTML  = '<i class="fas fa-exclamation-circle me-1"></i>Save failed';
+                status.style.cssText = 'background:#fff5f5;color:#e53e3e;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;';
+            }
+        }).catch(() => {
+            status.innerHTML  = '<i class="fas fa-exclamation-circle me-1"></i>Save failed';
+            status.style.cssText = 'background:#fff5f5;color:#e53e3e;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;';
+        });
     }
+
+    // ── LOAD EXISTING SIGNATURE ──
+    (function() {
+        const saved = '@Html.Raw(Model?.SignatureBase64 ?? "")';
+        if (saved && saved.startsWith('data:')) setSavedSignature(saved);
+    })();
 
     // ── AVATAR PREVIEW ──
     function previewAvatar(input) {

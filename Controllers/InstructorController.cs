@@ -370,7 +370,7 @@ namespace OnlineClearanceSystem.Controllers
                 var cmd = new MySqlCommand(@"
                     SELECT
                         u.first_name, u.middle_initial, u.last_name, u.username,
-                        sig.employee_id
+                        sig.employee_id, sig.signature_data
                     FROM users u
                     LEFT JOIN signatories sig ON sig.user_id = u.id
                     WHERE u.id = @uid LIMIT 1", conn);
@@ -379,11 +379,12 @@ namespace OnlineClearanceSystem.Controllers
                 using var r = cmd.ExecuteReader();
                 if (r.Read())
                 {
-                    model.FirstName     = r.IsDBNull(r.GetOrdinal("first_name")) ? "" : r.GetString("first_name");
-                    model.MiddleInitial = r.IsDBNull(r.GetOrdinal("middle_initial")) ? "" : r.GetString("middle_initial");
-                    model.LastName      = r.IsDBNull(r.GetOrdinal("last_name")) ? "" : r.GetString("last_name");
-                    model.EmployeeId    = r.IsDBNull(r.GetOrdinal("employee_id")) ? "—" : r.GetString("employee_id");
-                    model.Password      = "";
+                    model.FirstName        = r.IsDBNull(r.GetOrdinal("first_name")) ? "" : r.GetString("first_name");
+                    model.MiddleInitial    = r.IsDBNull(r.GetOrdinal("middle_initial")) ? "" : r.GetString("middle_initial");
+                    model.LastName         = r.IsDBNull(r.GetOrdinal("last_name")) ? "" : r.GetString("last_name");
+                    model.EmployeeId       = r.IsDBNull(r.GetOrdinal("employee_id")) ? "—" : r.GetString("employee_id");
+                    model.SignatureBase64  = r.IsDBNull(r.GetOrdinal("signature_data")) ? null : r.GetString("signature_data");
+                    model.Password         = "";
                 }
                 r.Close();
 
@@ -408,6 +409,29 @@ namespace OnlineClearanceSystem.Controllers
             catch { }
 
             return View(model);
+        }
+
+        // ── Save Signature (AJAX) ─────────────────────────────
+        [HttpPost, ValidateAntiForgeryToken]
+        public IActionResult SaveSignature([FromBody] SaveSignatureDto dto)
+        {
+            var userId = int.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            try
+            {
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand(
+                    "UPDATE signatories SET signature_data = @sd WHERE user_id = @uid", conn);
+                cmd.Parameters.AddWithValue("@sd", dto.SignatureData ?? "");
+                cmd.Parameters.AddWithValue("@uid", userId);
+                cmd.ExecuteNonQuery();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
         }
 
         // ── Profile POST ──────────────────────────────────────
@@ -522,4 +546,5 @@ namespace OnlineClearanceSystem.Controllers
             }
         }
     }
+
 }
