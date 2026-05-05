@@ -65,15 +65,11 @@
                     <th>#</th>
                     <th>Academic Year</th>
                     <th>Semester</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody id="academic-tbody">
-                <!-- Populated from DB / JS -->
-            </tbody>
+            <tbody id="academic-tbody"></tbody>
         </table>
     </div>
 
@@ -117,16 +113,6 @@
                 <option value="2nd Semester">2nd Semester</option>
                 <option value="Summer">Summer</option>
             </select>
-        </div>
-        <div class="mb-3">
-            <label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:5px;">Start Date</label>
-            <input type="date" id="input-start"
-                style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;box-sizing:border-box;" />
-        </div>
-        <div class="mb-3">
-            <label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:5px;">End Date</label>
-            <input type="date" id="input-end"
-                style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;box-sizing:border-box;" />
         </div>
         <div class="mb-4">
             <label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:5px;">Status</label>
@@ -180,6 +166,7 @@ let academics     = [];
 let editingIndex  = null;
 let deletingIndex = null;
 
+// ── API calls ─────────────────────────────────────────────────
 async function loadAcademics() {
     try {
         const res = await fetch('/api/admin/academic');
@@ -191,10 +178,8 @@ async function loadAcademics() {
 async function saveRow() {
     const ay     = document.getElementById('input-ay').value.trim();
     const sem    = document.getElementById('input-sem').value;
-    const start  = document.getElementById('input-start').value;
-    const end    = document.getElementById('input-end').value;
     const status = document.getElementById('input-status').value;
-    if (!ay || !start || !end) { alert('Please fill in all fields.'); return; }
+    if (!ay) { alert('Please fill in the Academic Year.'); return; }
 
     if (status === 'Active') {
         const existing = academics.findIndex((a, i) => a.status === 'Active' && i !== editingIndex);
@@ -209,13 +194,13 @@ async function saveRow() {
             await fetch(`/api/admin/academic/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ay, sem, start, end, status })
+                body: JSON.stringify({ ay, sem, status })
             });
         } else {
             await fetch('/api/admin/academic', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ay, sem, start, end, status })
+                body: JSON.stringify({ ay, sem, status })
             });
         }
         await loadAcademics();
@@ -232,9 +217,105 @@ async function confirmDelete() {
     closeDeleteModal();
 }
 
-// Keep all other functions (renderTable, openModal, closeModal, editRow,
-// openDeleteModal, closeDeleteModal, filterTable, updateStats, escHtml)
-// exactly as they are — only saveRow() and confirmDelete() changed.
+// ── Modal helpers ─────────────────────────────────────────────
+function openModal(idx = null) {
+    editingIndex = idx;
+    const isEdit = idx !== null;
+
+    document.getElementById('modal-title').innerHTML = isEdit
+        ? '<i class="fas fa-edit me-2" style="color:#4299e1;"></i>Edit Academic Year'
+        : '<i class="fas fa-plus-circle me-2" style="color:#4299e1;"></i>Add Academic Year';
+
+    document.getElementById('input-ay').value     = isEdit ? academics[idx].ay     : '';
+    document.getElementById('input-sem').value    = isEdit ? academics[idx].sem    : '1st Semester';
+    document.getElementById('input-status').value = isEdit ? academics[idx].status : 'Active';
+
+    document.getElementById('academicModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('academicModal').style.display = 'none';
+    editingIndex = null;
+}
+
+function openDeleteModal(idx) {
+    deletingIndex = idx;
+    document.getElementById('delete-modal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('delete-modal').style.display = 'none';
+    deletingIndex = null;
+}
+
+// ── Table render ──────────────────────────────────────────────
+function renderTable() {
+    const tbody = document.getElementById('academic-tbody');
+    const empty = document.getElementById('academic-empty');
+
+    tbody.innerHTML = '';
+    if (!academics.length) {
+        empty.style.display = 'block';
+        updateStats();
+        return;
+    }
+    empty.style.display = 'none';
+
+    academics.forEach((a, i) => {
+        const statusColor = a.status === 'Active' ? '#48bb78' : '#a0aec0';
+        const statusBg    = a.status === 'Active' ? 'rgba(72,187,120,0.12)' : 'rgba(160,174,192,0.12)';
+        tbody.innerHTML += `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${escHtml(a.ay)}</td>
+                <td>${escHtml(a.sem)}</td>
+                <td>
+                    <span style="background:${statusBg};color:${statusColor};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">
+                        ${escHtml(a.status)}
+                    </span>
+                </td>
+                <td>
+                    <button onclick="openModal(${i})"
+                        style="background:rgba(66,153,225,0.12);color:#4299e1;border:none;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;margin-right:4px;">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="openDeleteModal(${i})"
+                        style="background:rgba(229,62,62,0.12);color:#fc8181;border:none;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
+    });
+
+    updateStats();
+}
+
+function updateStats() {
+    document.getElementById('stat-total').textContent     = new Set(academics.map(a => a.ay)).size;
+    document.getElementById('stat-semesters').textContent = academics.length;
+    document.getElementById('stat-active').textContent    = academics.filter(a => a.status === 'Active').length;
+}
+
+function filterTable(input, tableId) {
+    const q    = input.value.toLowerCase();
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+    rows.forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Close modals when clicking outside
+['academicModal', 'delete-modal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function (e) {
+        if (e.target === this) this.style.display = 'none';
+    });
+});
 
 loadAcademics();
 </script>

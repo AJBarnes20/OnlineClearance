@@ -2,34 +2,33 @@
     ViewData["Title"]      = "Student";
     ViewData["ActivePage"] = "Student";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    string view = ViewData["SubView"]?.ToString() ?? "all";  // all | cleared | incomplete | assign
+    string view = ViewData["SubView"]?.ToString() ?? "all";
 }
 
 <div class="page-title">Students</div>
 
 @if (view == "all" || view == "cleared" || view == "incomplete")
 {
-    <!-- STAT CARDS -->
     <div class="row g-3 mb-4">
         <div class="col">
             <div class="stat-card" style="flex-direction:column;align-items:flex-start;gap:4px;">
                 <div style="font-size:12px;color:var(--muted);font-weight:600;">Total Students</div>
-                <div class="stat-num">0</div>
+                <div class="stat-num" id="stat-total">0</div>
                 <div style="font-size:11px;color:var(--muted);">All year levels</div>
             </div>
         </div>
         <div class="col">
             <div class="stat-card" style="flex-direction:column;align-items:flex-start;gap:4px;border-top:3px solid var(--green);">
                 <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);font-weight:700;"><i class="fas fa-check-circle"></i> Cleared</div>
-                <div class="stat-num">0</div>
-                <div style="font-size:11px;color:var(--muted);">No records yet</div>
+                <div class="stat-num" id="stat-cleared">0</div>
+                <div style="font-size:11px;color:var(--muted);" id="stat-cleared-sub">No records yet</div>
             </div>
         </div>
         <div class="col">
             <div class="stat-card" style="flex-direction:column;align-items:flex-start;gap:4px;border-top:3px solid var(--red);">
-                <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#fc8181;font-weight:700;"><i class="fas fa-times-circle"></i> Incomplete</div>
-                <div class="stat-num">0</div>
-                <div style="font-size:11px;color:var(--muted);">No records yet</div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#fc8181;font-weight:700;"><i class="fas fa-clock"></i> Pending</div>
+                <div class="stat-num" id="stat-pending">0</div>
+                <div style="font-size:11px;color:var(--muted);" id="stat-pending-sub">No records yet</div>
             </div>
         </div>
         <div class="col">
@@ -40,65 +39,19 @@
                 <div style="font-size:12px;font-weight:700;color:#63b3ed;text-align:center;">Assign Signatories</div>
             </div>
         </div>
-
-        <!-- PROGRAM/COURSE FILTER -->
-        <div class="col-md-4">
-            <div style="background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--border);">
-                <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:10px;letter-spacing:1px;">PROGRAM/COURSE</div>
-
-                <!-- STEP 1: Course Select -->
-                <div id="step-course">
-                    <div class="position-relative mb-2">
-                        <select class="dark-input dark-select" id="course-select" onchange="onCourseChange()">
-                            <option value="">-- Select Course --</option>
-                            <option value="BSIT">Bachelor of Science in Information Technology (BSIT)</option>
-                            <option value="BIT">Bachelor of Industrial Technology (BIT)</option>
-                        </select>
-                    </div>
-                    <!-- STEP 2: Section radios -->
-                    <div id="section-dropdown" style="display:none;margin-top:8px;">
-                        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:1px;">SECTION</div>
-                        <div id="section-list"></div>
-                        <button class="btn-green-sm w-100 mt-2" onclick="onNextClick()">NEXT</button>
-                    </div>
-                </div>
-
-                <!-- STEP 3: Result mini-table -->
-                <div id="step-result" style="display:none;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                        <span id="result-label" style="font-size:12px;font-weight:700;color:var(--green);"></span>
-                        <button onclick="resetFilter()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;">← Change</button>
-                    </div>
-                    <div style="max-height:260px;overflow-y:auto;">
-                        <table style="width:100%;border-collapse:collapse;" id="filter-result-table">
-                            <thead>
-                                <tr style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">
-                                    <th style="padding:4px 6px;text-align:left;">Name</th>
-                                    <th style="padding:4px 6px;text-align:left;">ID</th>
-                                    <th style="padding:4px 6px;text-align:left;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="filter-result-body"></tbody>
-                        </table>
-                    </div>
-                    <div id="filter-empty" style="display:none;font-size:12px;color:var(--muted);text-align:center;padding:12px 0;">No students found.</div>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- TABLE TABS -->
     <div class="d-flex gap-2 mb-3">
         <a href="/Admin/Student"           class="ann-filter-btn @(view=="all"?"active":"")">All Students</a>
         <a href="/Admin/StudentCleared"    class="ann-filter-btn" style="@(view=="cleared"   ?"background:var(--green);color:white;border-color:var(--green);":"")">Cleared</a>
-        <a href="/Admin/StudentIncomplete" class="ann-filter-btn" style="@(view=="incomplete"?"background:var(--red);color:white;border-color:var(--red);":"")">Incomplete</a>
+        <a href="/Admin/StudentIncomplete" class="ann-filter-btn" style="@(view=="incomplete"?"background:var(--red);color:white;border-color:var(--red);":"")">Pending</a>
     </div>
 
     <div class="panel">
         <div class="panel-hd">
             <span class="panel-hd-title">
-                @if (view == "cleared")        { <text>Cleared Student Clearance &nbsp; A.Y. 2025-2026, 2nd Semester</text> }
-                else if (view == "incomplete") { <text>Incomplete Student Clearance &nbsp; A.Y. 2025-2026, 2nd Semester</text> }
+                @if (view == "cleared")        { <text>Cleared Student Clearance</text> }
+                else if (view == "incomplete") { <text>Pending Student Clearance</text> }
                 else                           { <text>All Student list accounts</text> }
             </span>
             <div class="search-wrap">
@@ -112,30 +65,22 @@
                     <tr>
                         <th>#</th>
                         <th>Name</th>
-                        <th>Student Id.</th>
-                        @if (view == "all") { <th>Status</th><th>Year Level/Section</th> }
-                        else { <th>Status</th> }
+                        <th>Student ID</th>
+                        @if (view == "all") { <th>Course</th><th>Year / Section</th> }
                         <th>Clearance Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Empty: students will appear here once they register -->
-                </tbody>
+                <tbody id="stu-tbody"></tbody>
             </table>
         </div>
 
-        <!-- EMPTY STATE -->
-        <div style="padding:56px 24px;text-align:center;">
+        <div id="stu-empty" style="display:none;padding:56px 24px;text-align:center;">
             <div style="width:72px;height:72px;border-radius:50%;background:rgba(66,153,225,0.10);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
                 <i class="fas fa-user-clock" style="font-size:30px;color:#4299e1;opacity:0.7;"></i>
             </div>
-            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">
-                No Students Registered Yet
-            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">No Students Registered Yet</div>
             <div style="font-size:13px;color:var(--muted);max-width:420px;margin:0 auto;line-height:1.6;">
                 Student accounts will appear here once they complete their registration.
-                As admin, you can assign organization signatory roles using the
-                <strong style="color:var(--text);">Assign Signatories</strong> card above.
             </div>
         </div>
     </div>
@@ -143,7 +88,6 @@
 
 @if (view == "assign")
 {
-    <!-- ASSIGN STUDENT SIGNATORIES -->
     <div class="panel mb-4">
         <div style="background:var(--tbl-hd-navy);padding:13px 18px;font-size:14px;font-weight:700;color:white;display:flex;align-items:center;justify-content:space-between;">
             <span><i class="fas fa-user-plus me-2"></i>Assign Student Organization Signatories</span>
@@ -153,30 +97,49 @@
             </a>
         </div>
         <div style="padding:20px;">
-
-            <!-- Admin notice -->
             <div style="background:rgba(66,153,225,0.08);border:1px solid rgba(66,153,225,0.25);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--muted);display:flex;align-items:flex-start;gap:10px;">
                 <i class="fas fa-info-circle" style="color:#4299e1;margin-top:2px;flex-shrink:0;"></i>
-                <span>
-                    Only registered students can be assigned as signatories.
-                    Students must complete their registration before they can be added here.
-                    As admin, you are solely responsible for assigning and managing these roles.
-                </span>
+                <span>Only registered students can be assigned as signatories. Search and select a student below, then enter their position.</span>
             </div>
-
             <div class="row g-3">
+
                 <div class="col-12">
-                    <label class="dark-label">Name of Student</label>
-                    <input class="dark-input" id="input-name" placeholder="Enter student name" />
+                    <label class="dark-label">Search & Select Student</label>
+                    <div class="position-relative">
+                        <input class="dark-input" id="input-student-search"
+                               placeholder="Type name or student ID..."
+                               autocomplete="off"
+                               oninput="filterStudentDropdown(this.value)"
+                               onfocus="showStudentDropdown()"
+                               style="padding-right:36px;" />
+                        <i class="fas fa-search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;"></i>
+                    </div>
+                    <!-- Dropdown list -->
+                    <div id="student-dropdown"
+                         style="display:none;position:absolute;z-index:999;background:var(--card);border:1px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;width:calc(100% - 48px);box-shadow:0 8px 24px rgba(0,0,0,0.3);margin-top:4px;">
+                    </div>
+                    <!-- Selected student pill -->
+                    <div id="selected-student-pill" style="display:none;margin-top:10px;background:rgba(66,153,225,0.12);border:1px solid rgba(66,153,225,0.3);border-radius:8px;padding:10px 14px;display:none;align-items:center;justify-content:space-between;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div id="pill-avatar" class="user-avatar-sm" style="background:#4299e1;flex-shrink:0;"></div>
+                            <div>
+                                <div id="pill-name" style="font-size:13px;font-weight:700;color:var(--text);"></div>
+                                <div id="pill-meta" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+                            </div>
+                        </div>
+                        <button onclick="clearSelectedStudent()"
+                                style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 6px;"
+                                title="Remove selection">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="col-12">
-                    <label class="dark-label">Year Level / Course / Section</label>
-                    <input class="dark-input" id="input-sec" placeholder="e.g. BSIT-2A" />
-                </div>
+
                 <div class="col-12">
                     <label class="dark-label">Position</label>
                     <input class="dark-input" id="input-pos" placeholder="e.g. SSG Treasurer" />
                 </div>
+
                 <div class="col-12">
                     <button class="btn-blue-sm" onclick="addSignatory()">
                         <i class="fas fa-plus me-2"></i>Add Signatory
@@ -194,157 +157,288 @@
                     <tr>
                         <th>#</th>
                         <th>Name</th>
-                        <th>Year Level / Course / Section</th>
+                        <th>Student ID</th>
+                        <th>Course / Year / Section</th>
                         <th>Position</th>
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="signatory-tbody">
-                    <!-- Rows injected by JS -->
-                </tbody>
+                <tbody id="signatory-tbody"></tbody>
             </table>
-
-            <!-- Empty state for signatory table -->
-            <div id="signatory-empty"
-                 style="padding:36px 24px;text-align:center;color:var(--muted);font-size:13px;">
+            <div id="signatory-empty" style="padding:36px 24px;text-align:center;color:var(--muted);font-size:13px;">
                 <i class="fas fa-list-ul" style="font-size:24px;opacity:0.3;display:block;margin-bottom:10px;"></i>
-                No signatories assigned yet. Use the form above to add one.
+                No signatories assigned yet.
             </div>
         </div>
     </div>
 }
 
+
 @section Scripts {
 <script>
-    let allStudents = [];
-    let signatories = [];
+    let allStudents    = [];
+    let signatories    = [];
+    let courseSections = {};
+    let selectedStudent = null;
+    const currentView = '@(ViewData["SubView"]?.ToString() ?? "all")';
 
-    const sections = {
-        BSIT: ['BSIT-1A','BSIT-2A','BSIT-3A','BSIT-4A','BSIT-IRREG'],
-        BIT:  ['BIT-CT1A','BIT-CT2A','BIT-CT3A','BIT-IRREG']
-    };
-
-    // ── Load students from DB ─────────────────────────
     async function loadStudents() {
         try {
-            const res  = await fetch('/api/admin/students');
-            allStudents = await res.json();
-        } catch { allStudents = []; }
+            const [stuRes, courseRes] = await Promise.all([
+                fetch('/api/admin/students'),
+                fetch('/api/admin/courses')
+            ]);
+            allStudents = await stuRes.json();
+            const courses = await courseRes.json();
+            buildCourseDropdown(courses);
+        } catch {
+            allStudents = [];
+        }
         renderStudentTable();
         updateStudentStats();
     }
 
+    // ── Load saved signatories from DB ───────────────
+    async function loadSignatories() {
+        try {
+            const res   = await fetch('/api/admin/student-signatories');
+            const data  = await res.json();
+            signatories = data.map(s => {
+                const yl  = s.year > 0 ? `${s.year}${['st','nd','rd'][s.year-1]||'th'} Year` : '—';
+                const sec = s.section !== '—' ? s.section : '—';
+                return {
+                    id   : s.id,
+                    name : s.name,
+                    idNum: s.idNum,
+                    sec  : [s.course !== '—' ? s.course : '', yl, sec].filter(x => x && x !== '—').join(' / ') || '—',
+                    pos  : s.position
+                };
+            });
+        } catch { signatories = []; }
+        renderSignatories();
+    }
+
+    function buildCourseDropdown(courses) {
+        const sel = document.getElementById('course-select');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">-- Select Course --</option>';
+        courses.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.code;
+            opt.textContent = `${c.code} — ${c.name}`;
+            sel.appendChild(opt);
+            courseSections[c.code] = [...new Set(
+                allStudents
+                    .filter(s => s.course === c.code)
+                    .map(s => `${s.course}-${s.year}${s.section}`)
+                    .filter(x => !x.includes('undefined') && !x.includes('—'))
+            )];
+        });
+    }
+
     function renderStudentTable() {
-        const tbody = document.querySelector('#stu-table tbody');
-        const empty = document.querySelector('.panel .panel-hd + .table-responsive + div');
+        const tbody = document.getElementById('stu-tbody');
+        const empty = document.getElementById('stu-empty');
         if (!tbody) return;
 
-        const view = '@(ViewData["SubView"]?.ToString() ?? "all")';
-
         let filtered = allStudents;
-        if (view === 'cleared')    filtered = allStudents.filter(s => s.cs === 'Cleared');
-        if (view === 'incomplete') filtered = allStudents.filter(s => s.cs !== 'Cleared');
+        if (currentView === 'cleared')    filtered = allStudents.filter(s => s.cs === 'Cleared');
+        if (currentView === 'incomplete') filtered = allStudents.filter(s => s.cs !== 'Cleared');
 
         tbody.innerHTML = '';
-        if (filtered.length === 0) return;
+        if (filtered.length === 0) { empty.style.display = 'block'; return; }
+        empty.style.display = 'none';
 
-        let rowNum = 1;
-        filtered.forEach(s => {
-            const tr = document.createElement('tr');
-            const yl = s.year > 0 ? `${s.year}${['st','nd','rd'][s.year-1]||'th'} Year` : '—';
-            const section = s.section !== '—' ? `${s.course}-${s.year}${s.section}` : '—';
+        filtered.forEach((s, idx) => {
+            const tr  = document.createElement('tr');
+            const yl  = s.year > 0 ? `${s.year}${['st','nd','rd'][s.year-1]||'th'} Year` : '—';
+            const sec = (s.section && s.section !== '—') ? s.section : '—';
             const csBadge = s.cs === 'Cleared'
                 ? `<span style="background:rgba(56,161,105,0.15);color:#68d391;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Cleared</span>`
-                : `<span style="background:rgba(229,62,62,0.15);color:#fc8181;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Incomplete</span>`;
+                : `<span style="background:rgba(229,62,62,0.15);color:#fc8181;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Pending</span>`;
+            const courseBadge = (s.course && s.course !== '—')
+                ? `<span style="background:rgba(66,153,225,0.15);color:#63b3ed;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">${escHtml(s.course)}</span>`
+                : `<span style="color:var(--muted);font-size:12px;">Not assigned</span>`;
 
             tr.innerHTML = `
-                <td style="color:var(--muted);">${String(rowNum++).padStart(2,'0')}</td>
+                <td style="color:var(--muted);">${String(idx+1).padStart(2,'0')}</td>
                 <td>
                     <div class="d-flex align-items-center gap-2">
-                        <div class="user-avatar-sm" style="background:#4299e1;">
-                            ${escHtml(s.name.charAt(0))}
-                        </div>
+                        <div class="user-avatar-sm" style="background:#4299e1;">${escHtml(s.name.charAt(0))}</div>
                         ${escHtml(s.name)}
                     </div>
                 </td>
                 <td><span class="badge-active" style="font-size:11px;">${escHtml(s.idNum)}</span></td>
-                ${view === 'all' ? `<td><span class="badge-active" style="background:rgba(66,153,225,0.15);color:#63b3ed;border-color:rgba(66,153,225,0.3);">${escHtml(s.course||'—')}</span></td>
-                <td style="color:var(--muted);">${yl} / ${escHtml(s.section||'—')}</td>` : ''}
+                ${currentView === 'all' ? `<td>${courseBadge}</td><td style="color:var(--muted);font-size:13px;">${yl} / ${escHtml(sec)}</td>` : ''}
                 <td>${csBadge}</td>`;
             tbody.appendChild(tr);
         });
     }
 
     function updateStudentStats() {
-        const countEls = document.querySelectorAll('.stat-num');
-        if (countEls[0]) countEls[0].textContent = allStudents.length;
-        if (countEls[1]) countEls[1].textContent = allStudents.filter(s => s.cs === 'Cleared').length;
-        if (countEls[2]) countEls[2].textContent = allStudents.filter(s => s.cs !== 'Cleared').length;
+        const total   = allStudents.length;
+        const cleared = allStudents.filter(s => s.cs === 'Cleared').length;
+        const pending = allStudents.filter(s => s.cs !== 'Cleared').length;
+
+        const elTotal      = document.getElementById('stat-total');
+        const elCleared    = document.getElementById('stat-cleared');
+        const elPending    = document.getElementById('stat-pending');
+        const elClearedSub = document.getElementById('stat-cleared-sub');
+        const elPendingSub = document.getElementById('stat-pending-sub');
+
+        if (elTotal)      elTotal.textContent      = total;
+        if (elCleared)    elCleared.textContent    = cleared;
+        if (elPending)    elPending.textContent    = pending;
+        if (elClearedSub) elClearedSub.textContent = cleared > 0 ? `${cleared} student(s)` : 'No records yet';
+        if (elPendingSub) elPendingSub.textContent = pending > 0 ? `${pending} student(s)` : 'No records yet';
     }
 
-    // ── Course/section filter ─────────────────────────
-    function onCourseChange() {
-        const course  = document.getElementById('course-select').value;
-        const secList = document.getElementById('section-list');
-        const secDrop = document.getElementById('section-dropdown');
-        document.getElementById('step-result').style.display = 'none';
-        document.getElementById('course-select').style.display = '';
-        if (!course) { secDrop.style.display = 'none'; return; }
-        const secs = sections[course] || [];
-        secList.innerHTML = secs.map(s =>
-            `<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;border-radius:6px;transition:background 0.15s;"
-                   onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-                   onmouseout="this.style.background=''">
-                <input type="radio" name="section" value="${s}" style="accent-color:var(--green);" />
-                <span style="font-size:13px;">${s}</span>
-            </label>`).join('');
-        secDrop.style.display = 'block';
+    // ── Student search dropdown ───────────────────────
+    function showStudentDropdown() {
+        filterStudentDropdown(document.getElementById('input-student-search')?.value || '');
     }
 
-    function onNextClick() {
-        const selected = document.querySelector('input[name="section"]:checked');
-        if (!selected) { alert('Please select a section first.'); return; }
-        const sec      = selected.value;
-        const filtered = allStudents.filter(s =>
-            `${s.course}-${s.year}${s.section}` === sec || sec.includes('IRREG'));
+    function filterStudentDropdown(q) {
+        const dd = document.getElementById('student-dropdown');
+        if (!dd) return;
+        const term = q.toLowerCase().trim();
 
-        document.getElementById('course-select').style.display = 'none';
-        document.getElementById('section-dropdown').style.display = 'none';
-        document.getElementById('result-label').textContent = sec;
+        const assignedIds = signatories.map(s => s.id);
+        const matches = allStudents.filter(s =>
+            !assignedIds.includes(s.id) &&
+            (s.name.toLowerCase().includes(term) || s.idNum.toLowerCase().includes(term))
+        ).slice(0, 8);
 
-        const tbody = document.getElementById('filter-result-body');
-        const empty = document.getElementById('filter-empty');
-
-        if (filtered.length === 0) {
-            tbody.innerHTML = '';
-            empty.style.display = 'block';
+        if (matches.length === 0) {
+            dd.innerHTML = `<div style="padding:12px 16px;font-size:12px;color:var(--muted);text-align:center;">No students found.</div>`;
         } else {
-            empty.style.display = 'none';
-            tbody.innerHTML = filtered.map(s => {
-                const badgeStyle = s.cs === 'Cleared'
-                    ? 'background:rgba(72,187,120,0.15);color:#68d391;border:1px solid rgba(72,187,120,0.3);'
-                    : 'background:rgba(252,129,129,0.15);color:#fc8181;border:1px solid rgba(252,129,129,0.3);';
-                return `<tr>
-                    <td style="padding:6px;font-size:12px;font-weight:500;">${escHtml(s.name)}</td>
-                    <td style="padding:6px;font-size:11px;color:var(--muted);">${escHtml(s.idNum)}</td>
-                    <td style="padding:6px;">
-                        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;${badgeStyle}">
-                            ${escHtml(s.cs)}
-                        </span>
-                    </td>
-                </tr>`;
+            dd.innerHTML = matches.map(s => {
+                const yl   = s.year > 0 ? `${s.year}${['st','nd','rd'][s.year-1]||'th'} Year` : '';
+                const sec  = s.section !== '—' ? s.section : '';
+                const meta = [s.course !== '—' ? s.course : '', yl, sec].filter(Boolean).join(' · ') || 'No course assigned';
+                return `<div onclick="selectStudent(${s.id})"
+                    style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;transition:background 0.15s;"
+                    onmouseover="this.style.background='rgba(66,153,225,0.08)'"
+                    onmouseout="this.style.background=''">
+                    <div class="user-avatar-sm" style="background:#4299e1;flex-shrink:0;">${escHtml(s.name.charAt(0))}</div>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;color:var(--text);">${escHtml(s.name)}</div>
+                        <div style="font-size:11px;color:var(--muted);margin-top:1px;">${escHtml(s.idNum)} &nbsp;·&nbsp; ${escHtml(meta)}</div>
+                    </div>
+                </div>`;
             }).join('');
         }
-        document.getElementById('step-result').style.display = 'block';
+        dd.style.display = 'block';
     }
 
-    function resetFilter() {
-        document.getElementById('step-result').style.display = 'none';
-        document.getElementById('course-select').value = '';
-        document.getElementById('course-select').style.display = '';
-        document.getElementById('section-dropdown').style.display = 'none';
-        const checked = document.querySelector('input[name="section"]:checked');
-        if (checked) checked.checked = false;
+    function selectStudent(id) {
+        selectedStudent = allStudents.find(s => s.id === id);
+        if (!selectedStudent) return;
+
+        document.getElementById('student-dropdown').style.display = 'none';
+        document.getElementById('input-student-search').value = '';
+
+        const yl   = selectedStudent.year > 0 ? `${selectedStudent.year}${['st','nd','rd'][selectedStudent.year-1]||'th'} Year` : '';
+        const sec  = selectedStudent.section !== '—' ? selectedStudent.section : '';
+        const meta = [selectedStudent.course !== '—' ? selectedStudent.course : '', yl, sec].filter(Boolean).join(' · ') || 'No course assigned';
+
+        document.getElementById('pill-avatar').textContent = selectedStudent.name.charAt(0);
+        document.getElementById('pill-name').textContent   = selectedStudent.name;
+        document.getElementById('pill-meta').textContent   = `${selectedStudent.idNum}  ·  ${meta}`;
+
+        document.getElementById('selected-student-pill').style.display = 'flex';
+    }
+
+    function clearSelectedStudent() {
+        selectedStudent = null;
+        document.getElementById('selected-student-pill').style.display = 'none';
+        document.getElementById('input-student-search').value = '';
+        document.getElementById('student-dropdown').style.display = 'none';
+    }
+
+    document.addEventListener('click', e => {
+        const dd    = document.getElementById('student-dropdown');
+        const input = document.getElementById('input-student-search');
+        if (dd && input && !dd.contains(e.target) && e.target !== input)
+            dd.style.display = 'none';
+    });
+
+    // ── Add signatory — now saves to DB ──────────────
+    async function addSignatory() {
+        if (!selectedStudent) { alert('Please select a student first.'); return; }
+        const pos = document.getElementById('input-pos')?.value.trim();
+        if (!pos) { alert('Please enter a position.'); return; }
+
+        if (signatories.find(s => s.id === selectedStudent.id)) {
+            alert('This student is already in the signatories list.');
+            return;
+        }
+
+        try {
+            const res  = await fetch('/api/admin/student-signatories', {
+                method : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body   : JSON.stringify({ userId: selectedStudent.id, position: pos })
+            });
+            const data = await res.json();
+            if (!data.success) { alert('Error: ' + (data.error ?? 'Unknown error')); return; }
+
+            const yl  = selectedStudent.year > 0 ? `${selectedStudent.year}${['st','nd','rd'][selectedStudent.year-1]||'th'} Year` : '—';
+            const sec = selectedStudent.section !== '—' ? selectedStudent.section : '—';
+
+            signatories.push({
+                id   : data.id,
+                name : selectedStudent.name,
+                idNum: selectedStudent.idNum,
+                sec  : [selectedStudent.course !== '—' ? selectedStudent.course : '', yl, sec].filter(x => x && x !== '—').join(' / ') || '—',
+                pos
+            });
+
+            renderSignatories();
+            clearSelectedStudent();
+            document.getElementById('input-pos').value = '';
+        } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    // ── Remove signatory — now deletes from DB ────────
+    async function removeSignatory(id) {
+        if (!confirm('Remove this signatory?')) return;
+        try {
+            await fetch(`/api/admin/student-signatories/${id}`, { method: 'DELETE' });
+            signatories = signatories.filter(s => s.id !== id);
+            renderSignatories();
+        } catch { }
+    }
+
+    function renderSignatories() {
+        const tbody = document.getElementById('signatory-tbody');
+        const empty = document.getElementById('signatory-empty');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (signatories.length === 0) { empty.style.display = 'block'; return; }
+        empty.style.display = 'none';
+
+        signatories.forEach((s, i) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="color:var(--muted);">${String(i+1).padStart(2,'0')}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="user-avatar-sm" style="background:#4299e1;">${escHtml(s.name.charAt(0))}</div>
+                        ${escHtml(s.name)}
+                    </div>
+                </td>
+                <td><span class="badge-active" style="font-size:11px;">${escHtml(s.idNum)}</span></td>
+                <td style="color:var(--muted);font-size:13px;">${escHtml(s.sec)}</td>
+                <td>${escHtml(s.pos)}</td>
+                <td>
+                    <button onclick="removeSignatory(${s.id})"
+                        style="background:rgba(229,62,62,0.12);border:none;color:#e53e3e;border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;">
+                        <i class="fas fa-trash-alt me-1"></i>Remove
+                    </button>
+                </td>`;
+            tbody.appendChild(row);
+        });
     }
 
     function filterTable(input, id) {
@@ -356,62 +450,58 @@
 
     function showAssign() { window.location.href = '/Admin/StudentAssign'; }
 
-    // ── Signatory list (assign view) ──────────────────
-    function renderSignatories() {
-        const tbody = document.getElementById('signatory-tbody');
-        const empty = document.getElementById('signatory-empty');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (signatories.length === 0) { empty.style.display = 'block'; return; }
-        empty.style.display = 'none';
-        signatories.forEach((s, i) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td style="color:var(--muted);">${String(i+1).padStart(2,'00')}</td>
-                <td>
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="user-avatar-sm" style="background:#4299e1;">
-                            ${escHtml(s.name.charAt(0))}
-                        </div>
-                        ${escHtml(s.name)}
-                    </div>
-                </td>
-                <td style="color:var(--muted);">${escHtml(s.sec)}</td>
-                <td>${escHtml(s.pos)}</td>
-                <td>
-                    <button onclick="removeSignatory(${i})"
-                        style="background:rgba(229,62,62,0.12);border:none;color:#e53e3e;
-                               border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;">
-                        <i class="fas fa-trash-alt me-1"></i>Remove
-                    </button>
-                </td>`;
-            tbody.appendChild(row);
-        });
-    }
-
-    function addSignatory() {
-        const name = document.getElementById('input-name')?.value.trim();
-        const sec  = document.getElementById('input-sec')?.value.trim();
-        const pos  = document.getElementById('input-pos')?.value.trim();
-        if (!name || !sec || !pos) { alert('Please fill in all fields.'); return; }
-        signatories.push({ name, sec, pos });
-        renderSignatories();
-        document.getElementById('input-name').value = '';
-        document.getElementById('input-sec').value  = '';
-        document.getElementById('input-pos').value  = '';
-    }
-
-    function removeSignatory(index) {
-        if (!confirm('Remove this signatory?')) return;
-        signatories.splice(index, 1);
-        renderSignatories();
-    }
-
     function escHtml(str) {
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    loadStudents();
+    // Replace the bottom of your script:
+
+async function loadStudents() {
+    try {
+        const [stuRes, courseRes] = await Promise.all([
+            fetch('/api/admin/students'),
+            fetch('/api/admin/courses')
+        ]);
+
+        const stuData    = await stuRes.json();
+        const courseData = await courseRes.json();
+
+        allStudents = Array.isArray(stuData) ? stuData : [];
+        buildCourseDropdown(courseData);
+    } catch (e) {
+        console.error('loadStudents error:', e);
+        allStudents = [];
+    }
+    renderStudentTable();
+    updateStudentStats();
+}
+
+async function loadSignatories() {
+    try {
+        const res  = await fetch('/api/admin/student-signatories');
+        const data = await res.json();
+
+        signatories = Array.isArray(data) ? data.map(s => {
+            const yl  = s.year > 0 ? `${s.year}${['st','nd','rd'][s.year-1]||'th'} Year` : '—';
+            const sec = s.section !== '—' ? s.section : '—';
+            return {
+                id   : s.id,
+                name : s.name,
+                idNum: s.idNum,
+                sec  : [s.course !== '—' ? s.course : '', yl, sec].filter(x => x && x !== '—').join(' / ') || '—',
+                pos  : s.position
+            };
+        }) : [];
+    } catch (e) {
+        console.error('loadSignatories error:', e);
+        signatories = [];
+    }
     renderSignatories();
+}
+
+// Bottom of script — run independently, never block each other
+loadStudents();
+loadSignatories();
+
 </script>
 }

@@ -63,138 +63,6 @@ namespace OnlineClearanceSystem.Controllers
         // ══════════════════════════════════════════════════
         // API — DASHBOARD
         // ══════════════════════════════════════════════════
-// ── GET /api/admin/courses ────────────────────────
-[HttpGet("/api/admin/courses")]
-public IActionResult GetCourses()
-{
-    var items = new List<object>();
-    try
-    {
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-        var cmd = new MySqlCommand(
-            "SELECT id, course_code, description FROM courses ORDER BY course_code", conn);
-        using var r = cmd.ExecuteReader();
-        while (r.Read())
-            items.Add(new
-            {
-                id         = r.GetInt32("id"),
-                code       = r.GetString("course_code"),
-                name       = r.IsDBNull(r.GetOrdinal("description")) ? "" : r.GetString("description"),
-                sections   = new List<object>(),
-                irregulars = new List<object>()
-            });
-    }
-    catch { }
-    return Ok(items);
-}
-
-[HttpPost("/api/admin/courses")]
-public IActionResult CreateCourse([FromBody] JsonElement body)
-{
-    try
-    {
-        var code = body.GetProperty("code").GetString() ?? "";
-        var name = body.GetProperty("name").GetString() ?? "";
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-        var cmd = new MySqlCommand(@"
-            INSERT INTO courses (course_code, description) VALUES (@c, @n);
-            SELECT LAST_INSERT_ID();", conn);
-        cmd.Parameters.AddWithValue("@c", code);
-        cmd.Parameters.AddWithValue("@n", name);
-        var newId = Convert.ToInt32(cmd.ExecuteScalar());
-        return Ok(new { success = true, id = newId });
-    }
-    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
-}
-
-[HttpPut("/api/admin/courses/{id}")]
-public IActionResult UpdateCourse(int id, [FromBody] JsonElement body)
-{
-    try
-    {
-        var code = body.GetProperty("code").GetString() ?? "";
-        var name = body.GetProperty("name").GetString() ?? "";
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-        var cmd = new MySqlCommand(
-            "UPDATE courses SET course_code=@c, description=@n WHERE id=@id", conn);
-        cmd.Parameters.AddWithValue("@c",  code);
-        cmd.Parameters.AddWithValue("@n",  name);
-        cmd.Parameters.AddWithValue("@id", id);
-        cmd.ExecuteNonQuery();
-        return Ok(new { success = true });
-    }
-    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
-}
-
-// ── GET /api/admin/org-signatories ───────────────
-[HttpGet("/api/admin/org-signatories")]
-public IActionResult GetOrgSignatories()
-{
-    var items = new List<object>();
-    try
-    {
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-        var cmd = new MySqlCommand(@"
-            SELECT o.id, CONCAT(u.first_name,' ',u.last_name) AS name,
-                   sig.employee_id, o.position_title
-            FROM organizations o
-            JOIN signatories sig ON sig.employee_id = o.org_signatory
-            JOIN users u ON u.id = sig.user_id
-            ORDER BY o.id", conn);
-        using var r = cmd.ExecuteReader();
-        while (r.Read())
-            items.Add(new
-            {
-                id   = r.GetInt32("id"),
-                name = r.GetString("name"),
-                eid  = r.GetString("employee_id"),
-                pos  = r.IsDBNull(r.GetOrdinal("position_title")) ? "—" : r.GetString("position_title")
-            });
-    }
-    catch { }
-    return Ok(items);
-}
-
-[HttpPost("/api/admin/org-signatories")]
-public IActionResult CreateOrgSignatory([FromBody] JsonElement body)
-{
-    try
-    {
-        var eid = body.GetProperty("eid").GetString() ?? "";
-        var pos = body.GetProperty("pos").GetString() ?? "";
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-        var cmd = new MySqlCommand(@"
-            INSERT INTO organizations (org_name, org_signatory, position_title)
-            VALUES (@n, @eid, @pos);
-            SELECT LAST_INSERT_ID();", conn);
-        cmd.Parameters.AddWithValue("@n",   pos);
-        cmd.Parameters.AddWithValue("@eid", eid);
-        cmd.Parameters.AddWithValue("@pos", pos);
-        var newId = Convert.ToInt32(cmd.ExecuteScalar());
-        return Ok(new { success = true, id = newId });
-    }
-    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
-}
-
-[HttpDelete("/api/admin/org-signatories/{id}")]
-public IActionResult DeleteOrgSignatory(int id)
-{
-    try
-    {
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-        var cmd = new MySqlCommand("DELETE FROM organizations WHERE id=@id", conn);
-        cmd.Parameters.AddWithValue("@id", id);
-        cmd.ExecuteNonQuery();
-        return Ok(new { success = true });
-    }
-    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
-}
 
         [HttpGet("/api/admin/stats")]
         public IActionResult Stats()
@@ -211,7 +79,7 @@ public IActionResult DeleteOrgSignatory(int id)
                     signatories = GetCount(conn, "SELECT COUNT(*) FROM signatories")
                 });
             }
-            catch { return Ok(new { students=0, instructors=0, staff=0, signatories=0 }); }
+            catch { return Ok(new { students = 0, instructors = 0, staff = 0, signatories = 0 }); }
         }
 
         [HttpGet("/api/admin/active-period")]
@@ -438,7 +306,6 @@ public IActionResult DeleteOrgSignatory(int id)
                 using var conn = DbHelper.GetConnection(_config);
                 conn.Open();
 
-                // If setting active, deactivate others first
                 if (active == 1)
                 {
                     var deact = new MySqlCommand(
@@ -515,56 +382,106 @@ public IActionResult DeleteOrgSignatory(int id)
         // ══════════════════════════════════════════════════
 
         [HttpGet("/api/admin/subjects")]
-        public IActionResult GetSubjects()
-        {
-            var items = new List<object>();
-            try
+public IActionResult GetSubjects()
+{
+    var items = new List<object>();
+    try
+    {
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(
+            "SELECT id, mis_code, subject_code, title, lec_units, lab_units FROM subjects ORDER BY subject_code", conn);
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+            items.Add(new
             {
-                using var conn = DbHelper.GetConnection(_config);
-                conn.Open();
-                var cmd = new MySqlCommand(
-                    "SELECT id, subject_code, title, lec_units, lab_units FROM subjects ORDER BY subject_code", conn);
-                using var r = cmd.ExecuteReader();
-                while (r.Read())
-                    items.Add(new
-                    {
-                        id   = r.GetInt32("id"),
-                        mis  = r.GetString("subject_code"),
-                        code = r.GetString("subject_code"),
-                        desc = r.IsDBNull(r.GetOrdinal("title")) ? "" : r.GetString("title"),
-                        lec  = r.IsDBNull(r.GetOrdinal("lec_units")) ? 0 : r.GetInt32("lec_units"),
-                        lab  = r.IsDBNull(r.GetOrdinal("lab_units")) ? 0 : r.GetInt32("lab_units")
-                    });
-            }
-            catch { }
-            return Ok(items);
-        }
+                id   = r.GetInt32("id"),
+                mis  = r.IsDBNull(r.GetOrdinal("mis_code"))   ? "" : r.GetString("mis_code"),
+                code = r.IsDBNull(r.GetOrdinal("subject_code"))? "" : r.GetString("subject_code"),
+                desc = r.IsDBNull(r.GetOrdinal("title"))       ? "" : r.GetString("title"),
+                lec  = r.IsDBNull(r.GetOrdinal("lec_units"))   ? 0  : r.GetInt32("lec_units"),
+                lab  = r.IsDBNull(r.GetOrdinal("lab_units"))   ? 0  : r.GetInt32("lab_units")
+            });
+    }
+    catch (Exception ex) { return Ok(new List<object>()); /* add: Console.WriteLine(ex.Message) to debug */ }
+    return Ok(items);
+}
 
         [HttpPost("/api/admin/subjects")]
-        public IActionResult CreateSubject([FromBody] JsonElement body)
+public IActionResult CreateSubject([FromBody] JsonElement body)
+{
+    try
+    {
+        var mis  = body.GetProperty("mis").GetString()  ?? "";
+        var code = body.GetProperty("code").GetString() ?? "";
+        var desc = body.GetProperty("desc").GetString() ?? "";
+        var lec  = body.GetProperty("lec").GetInt32();
+        var lab  = body.GetProperty("lab").GetInt32();
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(@"
+            INSERT INTO subjects (mis_code, subject_code, title, lec_units, lab_units)
+            VALUES (@mis, @code, @desc, @lec, @lab);
+            SELECT LAST_INSERT_ID();", conn);
+        cmd.Parameters.AddWithValue("@mis",  mis);
+        cmd.Parameters.AddWithValue("@code", code);
+        cmd.Parameters.AddWithValue("@desc", desc);
+        cmd.Parameters.AddWithValue("@lec",  lec);
+        cmd.Parameters.AddWithValue("@lab",  lab);
+        var newId = Convert.ToInt32(cmd.ExecuteScalar());
+        return Ok(new { success = true, id = newId });
+    }
+    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+}
+
+[HttpPut("/api/admin/subjects/{id}")]
+public IActionResult UpdateSubject(int id, [FromBody] JsonElement body)
+{
+    try
+    {
+        var mis  = body.GetProperty("mis").GetString()  ?? "";
+        var code = body.GetProperty("code").GetString() ?? "";
+        var desc = body.GetProperty("desc").GetString() ?? "";
+        var lec  = body.GetProperty("lec").GetInt32();
+        var lab  = body.GetProperty("lab").GetInt32();
+
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(@"
+            UPDATE subjects
+            SET mis_code=@mis, subject_code=@code, title=@desc,
+                lec_units=@lec, lab_units=@lab
+            WHERE id=@id", conn);
+        cmd.Parameters.AddWithValue("@mis",  mis);
+        cmd.Parameters.AddWithValue("@code", code);
+        cmd.Parameters.AddWithValue("@desc", desc);
+        cmd.Parameters.AddWithValue("@lec",  lec);
+        cmd.Parameters.AddWithValue("@lab",  lab);
+        cmd.Parameters.AddWithValue("@id",   id);
+        cmd.ExecuteNonQuery();
+        return Ok(new { success = true });
+    }
+    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+}
+
+        [HttpDelete("/api/admin/subjects/{id}")]
+        public IActionResult DeleteSubject(int id)
         {
             try
             {
-                var mis  = body.GetProperty("mis").GetString() ?? "";
-                var code = body.GetProperty("code").GetString() ?? "";
-                var desc = body.GetProperty("desc").GetString() ?? "";
-                var lec  = body.GetProperty("lec").GetInt32();
-                var lab  = body.GetProperty("lab").GetInt32();
                 using var conn = DbHelper.GetConnection(_config);
                 conn.Open();
-                var cmd = new MySqlCommand(@"
-                    INSERT INTO subjects (subject_code, title, lec_units, lab_units)
-                    VALUES (@code, @desc, @lec, @lab);
-                    SELECT LAST_INSERT_ID();", conn);
-                cmd.Parameters.AddWithValue("@code", code);
-                cmd.Parameters.AddWithValue("@desc", desc);
-                cmd.Parameters.AddWithValue("@lec",  lec);
-                cmd.Parameters.AddWithValue("@lab",  lab);
-                var newId = Convert.ToInt32(cmd.ExecuteScalar());
-                return Ok(new { success = true, id = newId });
+                var cmd = new MySqlCommand("DELETE FROM subjects WHERE id=@id", conn);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+                return Ok(new { success = true });
             }
             catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
         }
+
+        // ══════════════════════════════════════════════════
+        // API — SUBJECT OFFERINGS
+        // ══════════════════════════════════════════════════
 
         [HttpGet("/api/admin/subject-offerings")]
         public IActionResult GetSubjectOfferings()
@@ -575,17 +492,17 @@ public IActionResult DeleteOrgSignatory(int id)
                 using var conn = DbHelper.GetConnection(_config);
                 conn.Open();
                 var cmd = new MySqlCommand(@"
-                    SELECT so.id, so.mis_code,
-                           s.subject_code, s.title,
-                           s.lec_units, s.lab_units,
-                           CONCAT(u.first_name,' ',u.last_name) AS instructor,
-                           ap.is_active
-                    FROM subject_offerings so
-                    JOIN subjects s ON s.subject_code=so.subject_code
-                    JOIN signatories sig ON sig.employee_id=so.instructor_id
-                    JOIN users u ON u.id=sig.user_id
-                    JOIN academic_periods ap ON ap.id=so.period_id
-                    ORDER BY so.id DESC", conn);
+    SELECT so.id, so.mis_code,
+           s.subject_code, s.title,
+           s.lec_units, s.lab_units,
+           CONCAT(u.first_name,' ',u.last_name) AS instructor,
+           so.is_active
+    FROM subject_offerings so
+    JOIN subjects s ON s.subject_code = so.subject_code
+    JOIN signatories sig ON sig.employee_id = so.instructor_id
+    JOIN users u ON u.id = sig.user_id
+    JOIN academic_periods ap ON ap.id = so.period_id
+    ORDER BY so.id DESC", conn);
                 using var r = cmd.ExecuteReader();
                 while (r.Read())
                     items.Add(new
@@ -593,9 +510,9 @@ public IActionResult DeleteOrgSignatory(int id)
                         id     = r.GetInt32("id"),
                         mis    = r.GetString("mis_code"),
                         code   = r.GetString("subject_code"),
-                        desc   = r.IsDBNull(r.GetOrdinal("title")) ? "" : r.GetString("title"),
-                        lec    = r.IsDBNull(r.GetOrdinal("lec_units")) ? 0 : r.GetInt32("lec_units"),
-                        lab    = r.IsDBNull(r.GetOrdinal("lab_units")) ? 0 : r.GetInt32("lab_units"),
+                        desc   = r.IsDBNull(r.GetOrdinal("title"))     ? "" : r.GetString("title"),
+                        lec    = r.IsDBNull(r.GetOrdinal("lec_units")) ? 0  : r.GetInt32("lec_units"),
+                        lab    = r.IsDBNull(r.GetOrdinal("lab_units")) ? 0  : r.GetInt32("lab_units"),
                         inst   = r.GetString("instructor"),
                         active = r.GetBoolean("is_active")
                     });
@@ -609,7 +526,7 @@ public IActionResult DeleteOrgSignatory(int id)
         {
             try
             {
-                var mis  = body.GetProperty("mis").GetString() ?? "";
+                var mis  = body.GetProperty("mis").GetString()  ?? "";
                 var code = body.GetProperty("code").GetString() ?? "";
                 var inst = body.GetProperty("inst").GetString() ?? "";
                 using var conn = DbHelper.GetConnection(_config);
@@ -633,9 +550,373 @@ public IActionResult DeleteOrgSignatory(int id)
             }
             catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
         }
+        [HttpPut("/api/admin/subject-offerings/{id}")]
+public IActionResult UpdateOffering(int id, [FromBody] JsonElement body)
+{
+    try
+    {
+        var active = body.GetProperty("active").GetBoolean();
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(
+            "UPDATE subject_offerings SET is_active=@active WHERE id=@id", conn);
+        cmd.Parameters.AddWithValue("@active", active ? 1 : 0);
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.ExecuteNonQuery();
+        return Ok(new { success = true });
+    }
+    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+}
+
+        // ══════════════════════════════════════════════════
+        // API — COURSES
+        // ══════════════════════════════════════════════════
+
+        [HttpGet("/api/admin/courses")]
+        public IActionResult GetCourses()
+        {
+            var items = new List<object>();
+            try
+            {
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand(
+                    "SELECT id, course_code, description FROM courses ORDER BY course_code", conn);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                    items.Add(new
+                    {
+                        id         = r.GetInt32("id"),
+                        code       = r.GetString("course_code"),
+                        name       = r.IsDBNull(r.GetOrdinal("description")) ? "" : r.GetString("description"),
+                        sections   = new List<object>(),
+                        irregulars = new List<object>()
+                    });
+            }
+            catch { }
+            return Ok(items);
+        }
+
+        [HttpPost("/api/admin/courses")]
+        public IActionResult CreateCourse([FromBody] JsonElement body)
+        {
+            try
+            {
+                var code = body.GetProperty("code").GetString() ?? "";
+                var name = body.GetProperty("name").GetString() ?? "";
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand(@"
+                    INSERT INTO courses (course_code, description) VALUES (@c, @n);
+                    SELECT LAST_INSERT_ID();", conn);
+                cmd.Parameters.AddWithValue("@c", code);
+                cmd.Parameters.AddWithValue("@n", name);
+                var newId = Convert.ToInt32(cmd.ExecuteScalar());
+                return Ok(new { success = true, id = newId });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        [HttpPut("/api/admin/courses/{id}")]
+        public IActionResult UpdateCourse(int id, [FromBody] JsonElement body)
+        {
+            try
+            {
+                var code = body.GetProperty("code").GetString() ?? "";
+                var name = body.GetProperty("name").GetString() ?? "";
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand(
+                    "UPDATE courses SET course_code=@c, description=@n WHERE id=@id", conn);
+                cmd.Parameters.AddWithValue("@c",  code);
+                cmd.Parameters.AddWithValue("@n",  name);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        [HttpDelete("/api/admin/courses/{id}")]
+        public IActionResult DeleteCourse(int id)
+        {
+            try
+            {
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand("DELETE FROM courses WHERE id=@id", conn);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        // ══════════════════════════════════════════════════
+        // API — SECTIONS
+        // ══════════════════════════════════════════════════
+
+        [HttpGet("/api/admin/sections")]
+        public IActionResult GetSections(int courseId)
+        {
+            var items = new List<object>();
+            try
+            {
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand(
+                    "SELECT id, section_name, year_level FROM sections WHERE course_id=@cid ORDER BY id", conn);
+                cmd.Parameters.AddWithValue("@cid", courseId);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                    items.Add(new
+                    {
+                        id   = r.GetInt32("id"),
+                        name = r.GetString("section_name"),
+                        year = r.IsDBNull(r.GetOrdinal("year_level")) ? "" : r.GetString("year_level")
+                    });
+            }
+            catch { }
+            return Ok(items);
+        }
+
+        [HttpPost("/api/admin/sections")]
+        public IActionResult CreateSection([FromBody] JsonElement body)
+        {
+            try
+            {
+                var courseId = body.GetProperty("courseId").GetInt32();
+                var name     = body.GetProperty("name").GetString() ?? "";
+                var year     = body.GetProperty("year").GetString() ?? "";
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand(@"
+                    INSERT INTO sections (course_id, section_name, year_level)
+                    VALUES (@cid, @n, @y);
+                    SELECT LAST_INSERT_ID();", conn);
+                cmd.Parameters.AddWithValue("@cid", courseId);
+                cmd.Parameters.AddWithValue("@n",   name);
+                cmd.Parameters.AddWithValue("@y",   year);
+                var newId = Convert.ToInt32(cmd.ExecuteScalar());
+                return Ok(new { success = true, id = newId });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        [HttpPut("/api/admin/sections/{id}")]
+        public IActionResult UpdateSection(int id, [FromBody] JsonElement body)
+        {
+            try
+            {
+                var name = body.GetProperty("name").GetString() ?? "";
+                var year = body.GetProperty("year").GetString() ?? "";
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand(
+                    "UPDATE sections SET section_name=@n, year_level=@y WHERE id=@id", conn);
+                cmd.Parameters.AddWithValue("@n",  name);
+                cmd.Parameters.AddWithValue("@y",  year);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        [HttpDelete("/api/admin/sections/{id}")]
+        public IActionResult DeleteSection(int id)
+        {
+            try
+            {
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand("DELETE FROM sections WHERE id=@id", conn);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        // ══════════════════════════════════════════════════
+        // API — INSTRUCTORS
+        // ══════════════════════════════════════════════════
 
         [HttpGet("/api/admin/instructors")]
-        public IActionResult GetInstructors()
+public IActionResult GetInstructors()
+{
+    var items = new List<object>();
+    try
+    {
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(@"
+            SELECT u.id,
+                   CONCAT(u.first_name,' ',u.last_name) AS name,
+                   u.username,
+                   COALESCE(sig.employee_id, '—') AS employee_id,
+                   u.created_at
+            FROM users u
+            LEFT JOIN signatories sig ON sig.user_id = u.id
+            WHERE u.role='Instructor' AND u.is_active=1
+            ORDER BY u.first_name", conn);
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+            items.Add(new
+            {
+                id         = r.GetInt32("id"),
+                name       = r.GetString("name"),
+                username   = r.GetString("username"),
+                employeeId = r.GetString("employee_id"),
+                joinedDate = r.GetDateTime("created_at").ToString("MMM d, yyyy")
+            });
+    }
+    catch { }
+    return Ok(items);
+}
+        // ══════════════════════════════════════════════════
+        // API — STUDENTS
+        // ══════════════════════════════════════════════════
+        [HttpGet("/api/admin/students")]
+public IActionResult GetStudents()
+{
+    var items = new List<object>();
+    try
+    {
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(@"
+            SELECT u.id,
+                   CONCAT(u.first_name,' ',u.last_name) AS name,
+                   COALESCE(s.student_number,'—')        AS student_number,
+                   COALESCE(c.course_code,'—')           AS course_code,
+                   COALESCE(cu.year_level, 0)            AS year_level,
+                   COALESCE(cu.section,'—')              AS section,
+                   CASE
+                       WHEN s.student_number IS NULL THEN 'Pending'
+                       WHEN (SELECT COUNT(*) FROM clearance_subjects cs2
+                             WHERE cs2.student_number = s.student_number) = 0
+                            THEN 'Pending'
+                       WHEN (SELECT COUNT(*) FROM clearance_subjects cs
+                             WHERE cs.student_number = s.student_number
+                             AND cs.status != 2) = 0
+                            THEN 'Cleared'
+                       ELSE 'Pending'
+                   END AS cs
+            FROM users u
+            LEFT JOIN students s    ON s.user_id    = u.id
+            LEFT JOIN curriculum cu ON cu.id         = s.curriculum_id
+            LEFT JOIN courses c     ON c.id          = cu.course_id
+            WHERE u.role = 'Student' AND u.is_active = 1
+            ORDER BY u.first_name", conn);
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+            items.Add(new
+            {
+                id      = r.GetInt32("id"),
+                name    = r.GetString("name"),
+                idNum   = r.GetString("student_number"),
+                course  = r.GetString("course_code"),
+                year    = r.GetInt32("year_level"),
+                section = r.GetString("section"),
+                cs      = r.GetString("cs")
+            });
+    }
+    catch (Exception ex)
+    {
+        return Ok(new { error = ex.Message });
+    }
+    return Ok(items);
+}
+
+// ══════════════════════════════════════════════════
+// API — STUDENT SIGNATORIES
+// ══════════════════════════════════════════════════
+
+[HttpGet("/api/admin/student-signatories")]
+public IActionResult GetStudentSignatories()
+{
+    var items = new List<object>();
+    try
+    {
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(@"
+            SELECT ss.id,
+                   CONCAT(u.first_name,' ',u.last_name) AS name,
+                   COALESCE(s.student_number,'—')       AS student_number,
+                   COALESCE(c.course_code,'—')          AS course,
+                   COALESCE(cu.year_level, 0)           AS year_level,
+                   COALESCE(cu.section,'—')             AS section,
+                   ss.position
+            FROM student_signatories ss
+            JOIN  users u     ON u.id      = ss.user_id
+            LEFT JOIN students s    ON s.user_id  = ss.user_id
+            LEFT JOIN curriculum cu ON cu.id       = s.curriculum_id
+            LEFT JOIN courses c     ON c.id        = cu.course_id
+            ORDER BY ss.id", conn);
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+            items.Add(new {
+                id       = r.GetInt32("id"),
+                name     = r.GetString("name"),
+                idNum    = r.IsDBNull(r.GetOrdinal("student_number")) ? "—" : r.GetString("student_number"),
+                course   = r.GetString("course"),
+                year     = r.GetInt32("year_level"),
+                section  = r.GetString("section"),
+                position = r.GetString("position")
+            });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("GetStudentSignatories error: " + ex.Message);
+    }
+    return Ok(items);
+}
+
+[HttpPost("/api/admin/student-signatories")]
+public IActionResult CreateStudentSignatory([FromBody] JsonElement body)
+{
+    try
+    {
+        var userId   = body.GetProperty("userId").GetInt32();
+        var position = body.GetProperty("position").GetString() ?? "";
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(@"
+            INSERT INTO student_signatories (user_id, position)
+            VALUES (@uid, @pos);
+            SELECT LAST_INSERT_ID();", conn);
+        cmd.Parameters.AddWithValue("@uid", userId);
+        cmd.Parameters.AddWithValue("@pos", position);
+        var newId = Convert.ToInt32(cmd.ExecuteScalar());
+        return Ok(new { success = true, id = newId });
+    }
+    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+}
+
+[HttpDelete("/api/admin/student-signatories/{id}")]
+public IActionResult DeleteStudentSignatory(int id)
+{
+    try
+    {
+        using var conn = DbHelper.GetConnection(_config);
+        conn.Open();
+        var cmd = new MySqlCommand(
+            "DELETE FROM student_signatories WHERE id=@id", conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.ExecuteNonQuery();
+        return Ok(new { success = true });
+    }
+    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+}
+
+        // ══════════════════════════════════════════════════
+        // API — STAFF
+        // ══════════════════════════════════════════════════
+
+        [HttpGet("/api/admin/staff")]
+        public IActionResult GetStaff()
         {
             var items = new List<object>();
             try
@@ -643,11 +924,21 @@ public IActionResult DeleteOrgSignatory(int id)
                 using var conn = DbHelper.GetConnection(_config);
                 conn.Open();
                 var cmd = new MySqlCommand(@"
-                    SELECT u.id, CONCAT(u.first_name,' ',u.last_name) AS name,
-                           sig.employee_id
+                    SELECT
+                        u.id,
+                        CONCAT(u.first_name,' ',u.last_name) AS name,
+                        u.username,
+                        COALESCE(sig.employee_id,'—')         AS employeeId,
+                        COALESCE(o.position_title,'—')         AS position,
+                        SUM(CASE WHEN co.status=2 THEN 1 ELSE 0 END) AS approved,
+                        SUM(CASE WHEN co.status=1 THEN 1 ELSE 0 END) AS pending
                     FROM users u
-                    JOIN signatories sig ON sig.user_id=u.id
-                    WHERE u.role='Instructor' AND u.is_active=1
+                    LEFT JOIN signatories sig ON sig.user_id = u.id
+                    LEFT JOIN organizations o ON o.org_signatory = sig.employee_id
+                    LEFT JOIN clearance_organization co ON co.org_signatory = sig.employee_id
+                    WHERE u.role = 'Instructor' AND u.is_active = 1
+                    GROUP BY u.id, u.first_name, u.last_name, u.username,
+                             sig.employee_id, o.position_title
                     ORDER BY u.first_name", conn);
                 using var r = cmd.ExecuteReader();
                 while (r.Read())
@@ -655,15 +946,19 @@ public IActionResult DeleteOrgSignatory(int id)
                     {
                         id         = r.GetInt32("id"),
                         name       = r.GetString("name"),
-                        employeeId = r.GetString("employee_id")
+                        username   = r.GetString("username"),
+                        employeeId = r.IsDBNull(r.GetOrdinal("employeeId")) ? "—"   : r.GetString("employeeId"),
+                        position   = r.IsDBNull(r.GetOrdinal("position"))   ? null  : r.GetString("position"),
+                        approved   = r.IsDBNull(r.GetOrdinal("approved"))   ? 0     : Convert.ToInt32(r["approved"]),
+                        pending    = r.IsDBNull(r.GetOrdinal("pending"))    ? 0     : Convert.ToInt32(r["pending"])
                     });
             }
             catch { }
             return Ok(items);
         }
 
-        [HttpGet("/api/admin/students")]
-        public IActionResult GetStudents()
+        [HttpGet("/api/admin/staff-positions")]
+        public IActionResult GetStaffPositions()
         {
             var items = new List<object>();
             try
@@ -671,40 +966,158 @@ public IActionResult DeleteOrgSignatory(int id)
                 using var conn = DbHelper.GetConnection(_config);
                 conn.Open();
                 var cmd = new MySqlCommand(@"
-                    SELECT u.id,
-                           CONCAT(u.first_name,' ',u.last_name) AS name,
-                           s.student_number,
-                           c.course_code,
-                           cu.year_level,
-                           cu.section,
-                           CASE WHEN
-                               (SELECT COUNT(*) FROM clearance_subjects cs
-                                WHERE cs.student_number=s.student_number
-                                AND cs.status != 2) = 0
-                               AND (SELECT COUNT(*) FROM clearance_subjects cs2
-                                WHERE cs2.student_number=s.student_number) > 0
-                           THEN 'Cleared' ELSE 'Incomplete' END AS cs
-                    FROM users u
-                    JOIN students s ON s.user_id=u.id
-                    LEFT JOIN curriculum cu ON cu.id=s.curriculum_id
-                    LEFT JOIN courses c ON c.id=cu.course_id
-                    WHERE u.role='Student' AND u.is_active=1
-                    ORDER BY u.first_name", conn);
+                    SELECT
+                        o.id,
+                        CONCAT(u.first_name,' ',u.last_name) AS name,
+                        sig.employee_id                       AS eid,
+                        o.position_title                      AS pos,
+                        SUM(CASE WHEN co.status=2 THEN 1 ELSE 0 END) AS approved,
+                        SUM(CASE WHEN co.status=1 THEN 1 ELSE 0 END) AS pending
+                    FROM organizations o
+                    JOIN signatories sig ON sig.employee_id = o.org_signatory
+                    JOIN users u ON u.id = sig.user_id
+                    LEFT JOIN clearance_organization co ON co.org_signatory = o.org_signatory
+                    GROUP BY o.id, u.first_name, u.last_name, sig.employee_id, o.position_title
+                    ORDER BY o.id", conn);
                 using var r = cmd.ExecuteReader();
                 while (r.Read())
                     items.Add(new
                     {
-                        id      = r.GetInt32("id"),
-                        name    = r.GetString("name"),
-                        idNum   = r.IsDBNull(r.GetOrdinal("student_number")) ? "—" : r.GetString("student_number"),
-                        course  = r.IsDBNull(r.GetOrdinal("course_code")) ? "—" : r.GetString("course_code"),
-                        year    = r.IsDBNull(r.GetOrdinal("year_level")) ? 0 : r.GetInt32("year_level"),
-                        section = r.IsDBNull(r.GetOrdinal("section")) ? "—" : r.GetString("section"),
-                        cs      = r.GetString("cs")
+                        id       = r.GetInt32("id"),
+                        name     = r.GetString("name"),
+                        eid      = r.IsDBNull(r.GetOrdinal("eid")) ? "—" : r.GetString("eid"),
+                        pos      = r.IsDBNull(r.GetOrdinal("pos")) ? "—" : r.GetString("pos"),
+                        approved = r.IsDBNull(r.GetOrdinal("approved")) ? 0 : Convert.ToInt32(r["approved"]),
+                        pending  = r.IsDBNull(r.GetOrdinal("pending"))  ? 0 : Convert.ToInt32(r["pending"])
                     });
             }
             catch { }
             return Ok(items);
+        }
+
+        [HttpPost("/api/admin/staff-positions")]
+        public IActionResult CreateStaffPosition([FromBody] JsonElement body)
+        {
+            try
+            {
+                var staffUserId = body.GetProperty("staffId").GetInt32();
+                var eid         = body.GetProperty("eid").GetString() ?? "";
+                var pos         = body.GetProperty("pos").GetString() ?? "";
+
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+
+                var sigCmd = new MySqlCommand(
+                    "SELECT employee_id FROM signatories WHERE user_id=@uid LIMIT 1", conn);
+                sigCmd.Parameters.AddWithValue("@uid", staffUserId);
+                var existingEid = sigCmd.ExecuteScalar()?.ToString();
+
+                if (string.IsNullOrEmpty(existingEid))
+                {
+                    var insertSig = new MySqlCommand(
+                        "INSERT INTO signatories (user_id, employee_id) VALUES (@uid, @eid)", conn);
+                    insertSig.Parameters.AddWithValue("@uid", staffUserId);
+                    insertSig.Parameters.AddWithValue("@eid", eid);
+                    insertSig.ExecuteNonQuery();
+                    existingEid = eid;
+                }
+
+                var cmd = new MySqlCommand(@"
+                    INSERT INTO organizations (org_name, org_signatory, position_title)
+                    VALUES (@n, @eid, @pos);
+                    SELECT LAST_INSERT_ID();", conn);
+                cmd.Parameters.AddWithValue("@n",   pos);
+                cmd.Parameters.AddWithValue("@eid", existingEid);
+                cmd.Parameters.AddWithValue("@pos", pos);
+                var newId = Convert.ToInt32(cmd.ExecuteScalar());
+                return Ok(new { success = true, id = newId });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        [HttpDelete("/api/admin/staff-positions/{id}")]
+        public IActionResult DeleteStaffPosition(int id)
+        {
+            try
+            {
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand("DELETE FROM organizations WHERE id=@id", conn);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        // ══════════════════════════════════════════════════
+        // API — ORG SIGNATORIES
+        // ══════════════════════════════════════════════════
+
+        [HttpGet("/api/admin/org-signatories")]
+        public IActionResult GetOrgSignatories()
+        {
+            var items = new List<object>();
+            try
+            {
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand(@"
+                    SELECT o.id, CONCAT(u.first_name,' ',u.last_name) AS name,
+                           sig.employee_id, o.position_title
+                    FROM organizations o
+                    JOIN signatories sig ON sig.employee_id = o.org_signatory
+                    JOIN users u ON u.id = sig.user_id
+                    ORDER BY o.id", conn);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                    items.Add(new
+                    {
+                        id   = r.GetInt32("id"),
+                        name = r.GetString("name"),
+                        eid  = r.GetString("employee_id"),
+                        pos  = r.IsDBNull(r.GetOrdinal("position_title")) ? "—" : r.GetString("position_title")
+                    });
+            }
+            catch { }
+            return Ok(items);
+        }
+
+        [HttpPost("/api/admin/org-signatories")]
+        public IActionResult CreateOrgSignatory([FromBody] JsonElement body)
+        {
+            try
+            {
+                var eid = body.GetProperty("eid").GetString() ?? "";
+                var pos = body.GetProperty("pos").GetString() ?? "";
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand(@"
+                    INSERT INTO organizations (org_name, org_signatory, position_title)
+                    VALUES (@n, @eid, @pos);
+                    SELECT LAST_INSERT_ID();", conn);
+                cmd.Parameters.AddWithValue("@n",   pos);
+                cmd.Parameters.AddWithValue("@eid", eid);
+                cmd.Parameters.AddWithValue("@pos", pos);
+                var newId = Convert.ToInt32(cmd.ExecuteScalar());
+                return Ok(new { success = true, id = newId });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        [HttpDelete("/api/admin/org-signatories/{id}")]
+        public IActionResult DeleteOrgSignatory(int id)
+        {
+            try
+            {
+                using var conn = DbHelper.GetConnection(_config);
+                conn.Open();
+                var cmd = new MySqlCommand("DELETE FROM organizations WHERE id=@id", conn);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
         }
 
         // ══════════════════════════════════════════════════
@@ -760,152 +1173,10 @@ public IActionResult DeleteOrgSignatory(int id)
             return RedirectToAction(nameof(Dashboard));
         }
 
-        // ── GET /api/admin/staff ──────────────────────────
-[HttpGet("/api/admin/staff")]
-public IActionResult GetStaff()
-{
-    var items = new List<object>();
-    try
-    {
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-        var cmd = new MySqlCommand(@"
-            SELECT
-                u.id,
-                CONCAT(u.first_name,' ',u.last_name) AS name,
-                u.username,
-                COALESCE(sig.employee_id,'—')         AS employeeId,
-                COALESCE(o.position_title,'—')         AS position,
-                SUM(CASE WHEN co.status=2 THEN 1 ELSE 0 END) AS approved,
-                SUM(CASE WHEN co.status=1 THEN 1 ELSE 0 END) AS pending
-            FROM users u
-            LEFT JOIN signatories sig ON sig.user_id = u.id
-            LEFT JOIN organizations o ON o.org_signatory = sig.employee_id
-            LEFT JOIN clearance_organization co ON co.org_signatory = sig.employee_id
-            WHERE u.role = 'Instructor' AND u.is_active = 1
-            GROUP BY u.id, u.first_name, u.last_name, u.username,
-                     sig.employee_id, o.position_title
-            ORDER BY u.first_name", conn);
-        using var r = cmd.ExecuteReader();
-        while (r.Read())
-            items.Add(new
-            {
-                id         = r.GetInt32("id"),
-                name       = r.GetString("name"),
-                username   = r.GetString("username"),
-                employeeId = r.IsDBNull(r.GetOrdinal("employeeId")) ? "—" : r.GetString("employeeId"),
-                position   = r.IsDBNull(r.GetOrdinal("position"))   ? null : r.GetString("position"),
-                approved   = r.IsDBNull(r.GetOrdinal("approved"))   ? 0 : Convert.ToInt32(r["approved"]),
-                pending    = r.IsDBNull(r.GetOrdinal("pending"))    ? 0 : Convert.ToInt32(r["pending"])
-            });
-    }
-    catch { }
-    return Ok(items);
-}
-
-// ── GET /api/admin/staff-positions ───────────────
-[HttpGet("/api/admin/staff-positions")]
-public IActionResult GetStaffPositions()
-{
-    var items = new List<object>();
-    try
-    {
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-        var cmd = new MySqlCommand(@"
-            SELECT
-                o.id,
-                CONCAT(u.first_name,' ',u.last_name) AS name,
-                sig.employee_id                       AS eid,
-                o.position_title                      AS pos,
-                SUM(CASE WHEN co.status=2 THEN 1 ELSE 0 END) AS approved,
-                SUM(CASE WHEN co.status=1 THEN 1 ELSE 0 END) AS pending
-            FROM organizations o
-            JOIN signatories sig ON sig.employee_id = o.org_signatory
-            JOIN users u ON u.id = sig.user_id
-            LEFT JOIN clearance_organization co ON co.org_signatory = o.org_signatory
-            GROUP BY o.id, u.first_name, u.last_name, sig.employee_id, o.position_title
-            ORDER BY o.id", conn);
-        using var r = cmd.ExecuteReader();
-        while (r.Read())
-            items.Add(new
-            {
-                id       = r.GetInt32("id"),
-                name     = r.GetString("name"),
-                eid      = r.IsDBNull(r.GetOrdinal("eid")) ? "—" : r.GetString("eid"),
-                pos      = r.IsDBNull(r.GetOrdinal("pos")) ? "—" : r.GetString("pos"),
-                approved = r.IsDBNull(r.GetOrdinal("approved")) ? 0 : Convert.ToInt32(r["approved"]),
-                pending  = r.IsDBNull(r.GetOrdinal("pending"))  ? 0 : Convert.ToInt32(r["pending"])
-            });
-    }
-    catch { }
-    return Ok(items);
-}
-
-// ── POST /api/admin/staff-positions ──────────────
-[HttpPost("/api/admin/staff-positions")]
-public IActionResult CreateStaffPosition([FromBody] JsonElement body)
-{
-    try
-    {
-        var staffUserId = body.GetProperty("staffId").GetInt32();
-        var eid         = body.GetProperty("eid").GetString() ?? "";
-        var pos         = body.GetProperty("pos").GetString() ?? "";
-
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-
-        // Get or create signatory record
-        var sigCmd = new MySqlCommand(
-            "SELECT employee_id FROM signatories WHERE user_id=@uid LIMIT 1", conn);
-        sigCmd.Parameters.AddWithValue("@uid", staffUserId);
-        var existingEid = sigCmd.ExecuteScalar()?.ToString();
-
-        if (string.IsNullOrEmpty(existingEid))
-        {
-            var insertSig = new MySqlCommand(
-                "INSERT INTO signatories (user_id, employee_id) VALUES (@uid, @eid)", conn);
-            insertSig.Parameters.AddWithValue("@uid", staffUserId);
-            insertSig.Parameters.AddWithValue("@eid", eid);
-            insertSig.ExecuteNonQuery();
-            existingEid = eid;
-        }
-
-        // Insert organization position
-        var cmd = new MySqlCommand(@"
-            INSERT INTO organizations (org_name, org_signatory, position_title)
-            VALUES (@n, @eid, @pos);
-            SELECT LAST_INSERT_ID();", conn);
-        cmd.Parameters.AddWithValue("@n",   pos);
-        cmd.Parameters.AddWithValue("@eid", existingEid);
-        cmd.Parameters.AddWithValue("@pos", pos);
-        var newId = Convert.ToInt32(cmd.ExecuteScalar());
-
-        return Ok(new { success = true, id = newId });
-    }
-    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
-}
-
-// ── DELETE /api/admin/staff-positions/{id} ────────
-[HttpDelete("/api/admin/staff-positions/{id}")]
-public IActionResult DeleteStaffPosition(int id)
-{
-    try
-    {
-        using var conn = DbHelper.GetConnection(_config);
-        conn.Open();
-        var cmd = new MySqlCommand(
-            "DELETE FROM organizations WHERE id=@id", conn);
-        cmd.Parameters.AddWithValue("@id", id);
-        cmd.ExecuteNonQuery();
-        return Ok(new { success = true });
-    }
-    catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
-}
-
         // ══════════════════════════════════════════════════
         // HELPERS
         // ══════════════════════════════════════════════════
+
         private int GetCount(MySqlConnection conn, string sql)
         {
             var cmd = new MySqlCommand(sql, conn);

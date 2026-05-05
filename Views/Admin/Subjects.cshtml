@@ -6,9 +6,8 @@
 
 <div class="page-title">Subject &amp; Course Management</div>
 
-<!-- STAT CARDS -->
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="stat-card">
             <div>
                 <div class="stat-num" id="stat-subjects">0</div>
@@ -17,7 +16,7 @@
             <div class="stat-icon-wrap si-blue"><i class="fas fa-book"></i></div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="stat-card">
             <div>
                 <div class="stat-num" id="stat-offered">0</div>
@@ -26,7 +25,7 @@
             <div class="stat-icon-wrap si-green"><i class="fas fa-check-circle"></i></div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="stat-card">
             <div>
                 <div class="stat-num" id="stat-courses">0</div>
@@ -35,33 +34,18 @@
             <div class="stat-icon-wrap si-teal"><i class="fas fa-graduation-cap"></i></div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div>
-                <div class="stat-num" id="stat-sections">0</div>
-                <div class="stat-label">Total Sections</div>
-            </div>
-            <div class="stat-icon-wrap si-purple"><i class="fas fa-layer-group"></i></div>
-        </div>
-    </div>
 </div>
 
-<!-- TAB NAVIGATION -->
 <div class="d-flex gap-2 mb-4">
     <button class="ann-filter-btn active" id="tab-subjects" onclick="switchTab('subjects')">
         <i class="fas fa-book me-1"></i>Subjects
     </button>
     <button class="ann-filter-btn" id="tab-courses" onclick="switchTab('courses')">
-        <i class="fas fa-graduation-cap me-1"></i>Courses &amp; Sections
+        <i class="fas fa-graduation-cap me-1"></i>Courses
     </button>
 </div>
 
-<!-- ══════════════════════════════════════
-     TAB 1: SUBJECTS
-══════════════════════════════════════ -->
 <div id="view-subjects">
-
-    <!-- TOTAL SUBJECTS -->
     <div class="panel mb-4">
         <div class="panel-hd">
             <span class="panel-hd-title"><i class="fas fa-book me-2"></i>Total Subjects</span>
@@ -101,7 +85,6 @@
         </div>
     </div>
 
-    <!-- SUBJECTS OFFERED -->
     <div class="panel">
         <div class="panel-hd">
             <span style="color:#4299e1;font-weight:700;">
@@ -112,8 +95,6 @@
                 <input class="search-input" placeholder="Search Subject, MIS, Code, Instructor" oninput="filterTable(this,'offered-table')" />
             </div>
         </div>
-
-        <!-- Active period bar -->
         <div id="active-period-bar" style="display:none;padding:10px 18px;background:rgba(56,161,105,0.08);border-bottom:1px solid rgba(56,161,105,0.2);font-size:12px;color:#68d391;align-items:center;gap:8px;">
             <i class="fas fa-circle" style="font-size:8px;"></i>
             <span id="active-period-label"></span>
@@ -123,7 +104,6 @@
             <i class="fas fa-exclamation-triangle"></i>
             <span>No active academic period. Please set one in <strong style="color:var(--text);">Academic Management</strong> before offering subjects.</span>
         </div>
-
         <div class="table-responsive">
             <table class="data-table" id="offered-table">
                 <thead>
@@ -153,12 +133,7 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     TAB 2: COURSES & SECTIONS
-══════════════════════════════════════ -->
 <div id="view-courses" style="display:none;">
-
-    <!-- COURSES TABLE -->
     <div class="panel mb-4">
         <div class="panel-hd">
             <span class="panel-hd-title" style="color:#4299e1;">
@@ -181,8 +156,6 @@
                         <th>#</th>
                         <th>Course Code</th>
                         <th>Program Name</th>
-                        <th>Sections</th>
-                        <th>Irregulars</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -199,66 +172,7 @@
             </div>
         </div>
     </div>
-
-    <!-- SECTIONS & IRREGULARS DETAIL PANEL -->
-    <div class="panel" id="detail-panel" style="display:none;">
-        <div style="background:var(--tbl-hd-navy);padding:13px 18px;font-size:14px;font-weight:700;color:white;display:flex;align-items:center;justify-content:space-between;border-radius:10px 10px 0 0;">
-            <span><i class="fas fa-sitemap me-2"></i>Managing: <span id="detail-course-label" style="color:#63b3ed;"></span></span>
-            <button onclick="closeDetailPanel()"
-                style="background:rgba(255,255,255,0.12);border:none;color:white;border-radius:6px;padding:4px 14px;font-size:12px;cursor:pointer;">
-                <i class="fas fa-times me-1"></i>Close
-            </button>
-        </div>
-        <div class="row g-0">
-            <!-- SECTIONS -->
-            <div class="col-md-6" style="border-right:1px solid var(--border);">
-                <div style="padding:14px 18px;background:rgba(56,161,105,0.08);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:13px;font-weight:700;color:#68d391;"><i class="fas fa-layer-group me-2"></i>Sections</span>
-                    <button class="btn-green-sm" style="font-size:11px;padding:4px 12px;" onclick="openSectionModal()">
-                        <i class="fas fa-plus me-1"></i>Add Section
-                    </button>
-                </div>
-                <div style="padding:14px;">
-                    <table class="data-table" id="section-table" style="margin-bottom:0;">
-                        <thead>
-                            <tr><th>#</th><th>Section Name</th><th>Year Level</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="section-tbody"></tbody>
-                    </table>
-                    <div id="section-empty" style="padding:32px 16px;text-align:center;color:var(--muted);font-size:13px;">
-                        <i class="fas fa-layer-group" style="font-size:22px;opacity:0.3;display:block;margin-bottom:8px;"></i>
-                        No sections yet. Click <strong>Add Section</strong> to create one.
-                    </div>
-                </div>
-            </div>
-            <!-- IRREGULARS -->
-            <div class="col-md-6">
-                <div style="padding:14px 18px;background:rgba(66,153,225,0.08);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:13px;font-weight:700;color:#63b3ed;"><i class="fas fa-users-cog me-2"></i>Irregular Groups</span>
-                    <button class="btn-blue-sm" style="font-size:11px;padding:4px 12px;" onclick="openIrregularModal()">
-                        <i class="fas fa-plus me-1"></i>Add Irregular
-                    </button>
-                </div>
-                <div style="padding:14px;">
-                    <table class="data-table" id="irregular-table" style="margin-bottom:0;">
-                        <thead>
-                            <tr><th>#</th><th>Group Name</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="irregular-tbody"></tbody>
-                    </table>
-                    <div id="irregular-empty" style="padding:32px 16px;text-align:center;color:var(--muted);font-size:13px;">
-                        <i class="fas fa-users-cog" style="font-size:22px;opacity:0.3;display:block;margin-bottom:8px;"></i>
-                        No irregular groups yet. Click <strong>Add Irregular</strong> to create one.
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
-
-<!-- ══════════════════════════════════════
-     MODALS
-══════════════════════════════════════ -->
 
 <!-- ADD SUBJECT MODAL -->
 <div class="modal fade modal-dark" id="addSubjectModal" tabindex="-1">
@@ -281,17 +195,50 @@
                 <div class="mb-3">
                     <label class="dark-label">Lec Unit</label>
                     <select class="dark-input dark-select" id="add-lec">
-                        @for (int u = 1; u <= 5; u++) { <option value="@u">@u</option> }
+                        @for (int u = 0; u <= 5; u++) { <option value="@u">@u</option> }
                     </select>
                 </div>
                 <div class="mb-3">
                     <label class="dark-label">Lab Unit</label>
                     <select class="dark-input dark-select" id="add-lab">
-                        @for (int u = 1; u <= 5; u++) { <option value="@u">@u</option> }
+                        @for (int u = 0; u <= 5; u++) { <option value="@u">@u</option> }
                     </select>
                 </div>
                 <button class="btn-blue-sm w-100" onclick="addSubject()">
                     <i class="fas fa-save me-1"></i>Save Subject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT SUBJECT MODAL -->
+<div class="modal fade modal-dark" id="editSubjectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2" style="color:#4299e1;"></i>Edit Subject</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-subj-idx" />
+                <div class="mb-3"><label class="dark-label">MIS Code</label><input class="dark-input" id="edit-mis" placeholder="e.g. GT-60" /></div>
+                <div class="mb-3"><label class="dark-label">Subject Code</label><input class="dark-input" id="edit-code" placeholder="e.g. GEC" /></div>
+                <div class="mb-3"><label class="dark-label">Description</label><input class="dark-input" id="edit-desc" placeholder="e.g. History" /></div>
+                <div class="mb-3">
+                    <label class="dark-label">Lec Unit</label>
+                    <select class="dark-input dark-select" id="edit-lec">
+                        @for (int u = 0; u <= 5; u++) { <option value="@u">@u</option> }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="dark-label">Lab Unit</label>
+                    <select class="dark-input dark-select" id="edit-lab">
+                        @for (int u = 0; u <= 5; u++) { <option value="@u">@u</option> }
+                    </select>
+                </div>
+                <button class="btn-blue-sm w-100" onclick="saveEditSubject()">
+                    <i class="fas fa-save me-1"></i>Save Changes
                 </button>
             </div>
         </div>
@@ -322,7 +269,6 @@
                     <label class="dark-label">Assign Instructor</label>
                     <select class="dark-input dark-select" id="offer-inst">
                         <option value="">-- Select Instructor --</option>
-                        <!-- TODO: Populate from registered instructors in DB -->
                     </select>
                 </div>
                 <div style="background:rgba(66,153,225,0.08);border:1px solid rgba(66,153,225,0.25);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--muted);display:flex;gap:8px;">
@@ -380,57 +326,6 @@
     </div>
 </div>
 
-<!-- SECTION MODAL -->
-<div id="section-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:420px;margin:16px;">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div style="font-size:15px;font-weight:800;color:var(--text);" id="section-modal-title">
-                <i class="fas fa-layer-group me-2" style="color:#38a169;"></i>Add Section
-            </div>
-            <button onclick="closeSectionModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="mb-3"><label class="dark-label">Section Name</label><input class="dark-input" id="section-name" placeholder="e.g. BSIT-1A" /></div>
-        <div class="mb-4">
-            <label class="dark-label">Year Level</label>
-            <select class="dark-input dark-select" id="section-year">
-                <option value="1st Year">1st Year</option>
-                <option value="2nd Year">2nd Year</option>
-                <option value="3rd Year">3rd Year</option>
-                <option value="4th Year">4th Year</option>
-            </select>
-        </div>
-        <div class="d-flex gap-2">
-            <button onclick="saveSection()" style="flex:1;background:#38a169;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">
-                <i class="fas fa-save me-1"></i>Save Section
-            </button>
-            <button onclick="closeSectionModal()" style="flex:1;background:var(--border);color:var(--text);border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
-        </div>
-    </div>
-</div>
-
-<!-- IRREGULAR MODAL -->
-<div id="irregular-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:420px;margin:16px;">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div style="font-size:15px;font-weight:800;color:var(--text);" id="irregular-modal-title">
-                <i class="fas fa-users-cog me-2" style="color:#4299e1;"></i>Add Irregular Group
-            </div>
-            <button onclick="closeIrregularModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="mb-3"><label class="dark-label">Group Name</label><input class="dark-input" id="irregular-name" placeholder="e.g. BSIT-IRREG" /></div>
-        <div style="background:rgba(66,153,225,0.08);border:1px solid rgba(66,153,225,0.2);border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:var(--muted);display:flex;gap:8px;">
-            <i class="fas fa-info-circle" style="color:#4299e1;margin-top:2px;flex-shrink:0;"></i>
-            <span>Irregular groups are for students not following the standard year-level track.</span>
-        </div>
-        <div class="d-flex gap-2">
-            <button onclick="saveIrregular()" style="flex:1;background:#4299e1;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">
-                <i class="fas fa-save me-1"></i>Save Group
-            </button>
-            <button onclick="closeIrregularModal()" style="flex:1;background:var(--border);color:var(--text);border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
-        </div>
-    </div>
-</div>
-
 <!-- SHARED DELETE CONFIRM MODAL -->
 <div id="delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:380px;margin:16px;text-align:center;">
@@ -450,27 +345,50 @@
 
 @section Scripts {
 <script>
-    /* ════════════════════════════════════════
-       DATA STORES — all start empty.
-       Replace with fetch() API calls when
-       backend is ready.
-    ════════════════════════════════════════ */
-    let subjects        = [];
-    let offered         = [];
-    let courses         = [];
-    let activeCourseIdx = null;
-    let assignTargetRow = null;
-    let editingType     = null;
-    let editingIdx      = null;
-    let deleteTarget    = null;
-    let activePeriod    = null;
+    let subjects     = [];
+    let offered      = [];
+    let courses      = [];
+    let editingType  = null;
+    let editingIdx   = null;
+    let deleteTarget = null;
+    let activePeriod = null;
 
-    // TODO: fetch active period from Academic Management
-    // const res = await fetch('/api/academic/active');
-    // activePeriod = await res.json();
-    // updatePeriodBars();
+    async function init() {
+        try {
+            const [sRes, oRes, cRes, pRes, iRes] = await Promise.all([
+                fetch('/api/admin/subjects'),
+                fetch('/api/admin/subject-offerings'),
+                fetch('/api/admin/courses'),
+                fetch('/api/admin/active-period'),
+                fetch('/api/admin/instructors')
+            ]);
+            subjects     = await sRes.json();
+            offered      = await oRes.json();
+            activePeriod = await pRes.json();
+            courses      = await cRes.json();
+            const instList = await iRes.json();
+            populateInstructors(instList);
+            if (!activePeriod.ay) activePeriod = null;
+        } catch (e) {
+            console.error('Init error:', e);
+        }
+        updatePeriodBars();
+        renderSubjects();
+        renderOffered();
+        renderCourses();
+    }
 
-    /* ══ TAB SWITCHER ══ */
+    function populateInstructors(instList) {
+        const sel = document.getElementById('offer-inst');
+        sel.innerHTML = '<option value="">-- Select Instructor --</option>';
+        instList.forEach(i => {
+            const opt = document.createElement('option');
+            opt.value = i.employeeId;
+            opt.textContent = i.name;
+            sel.appendChild(opt);
+        });
+    }
+
     function switchTab(tab) {
         document.getElementById('view-subjects').style.display = tab === 'subjects' ? '' : 'none';
         document.getElementById('view-courses').style.display  = tab === 'courses'  ? '' : 'none';
@@ -478,16 +396,12 @@
         document.getElementById('tab-courses').classList.toggle('active', tab === 'courses');
     }
 
-    /* ══ STATS ══ */
     function updateStats() {
-        const totalSections = courses.reduce((a, c) => a + c.sections.length + c.irregulars.length, 0);
         document.getElementById('stat-subjects').textContent = subjects.length;
         document.getElementById('stat-offered').textContent  = offered.length;
         document.getElementById('stat-courses').textContent  = courses.length;
-        document.getElementById('stat-sections').textContent = totalSections;
     }
 
-    /* ══ PERIOD BARS ══ */
     function updatePeriodBars() {
         const bar      = document.getElementById('active-period-bar');
         const noBar    = document.getElementById('no-period-bar');
@@ -504,14 +418,12 @@
         }
     }
 
-    /* ══════════════════════════════
-       SUBJECTS
-    ══════════════════════════════ */
+    /* ══ SUBJECTS ══ */
     function renderSubjects() {
         const tbody = document.getElementById('subj-body');
         const empty = document.getElementById('subj-empty');
         tbody.innerHTML = '';
-        if (subjects.length === 0) { empty.style.display = 'block'; updateStats(); return; }
+        if (!subjects.length) { empty.style.display = 'block'; updateStats(); return; }
         empty.style.display = 'none';
         subjects.forEach((s, i) => {
             const tr = document.createElement('tr');
@@ -522,46 +434,98 @@
                 <td style="text-align:center;">${s.lec}</td>
                 <td style="text-align:center;">${s.lab}</td>
                 <td>
-                    <button style="background:#4299e1;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;"
-                        data-bs-toggle="modal" data-bs-target="#offerSubjectModal"
-                        onclick="setOfferSubject(${i})">
-                        <i class="fas fa-plus me-1"></i>Offer
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button style="background:#4299e1;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;"
+                            onclick="openEditSubject(${i})">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                        <button style="background:#38a169;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;"
+                            data-bs-toggle="modal" data-bs-target="#offerSubjectModal"
+                            onclick="setOfferSubject(${i})">
+                            <i class="fas fa-plus me-1"></i>Offer
+                        </button>
+                        <button style="background:#e53e3e;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;"
+                            onclick="openDeleteModal('subject', ${i})">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </button>
+                    </div>
                 </td>`;
             tbody.appendChild(tr);
         });
         updateStats();
     }
 
-    function addSubject() {
+    async function addSubject() {
         const mis  = document.getElementById('add-mis').value.trim();
         const code = document.getElementById('add-code').value.trim();
         const desc = document.getElementById('add-desc').value.trim();
-        const lec  = document.getElementById('add-lec').value;
-        const lab  = document.getElementById('add-lab').value;
+        const lec  = parseInt(document.getElementById('add-lec').value);
+        const lab  = parseInt(document.getElementById('add-lab').value);
         if (!mis || !code || !desc) { alert('Please fill in MIS Code, Subject Code, and Description.'); return; }
-        subjects.push({ mis, code, desc, lec, lab });
-        renderSubjects();
-        document.getElementById('add-mis').value    = '';
-        document.getElementById('add-code').value   = '';
-        document.getElementById('add-desc').value   = '';
-        document.getElementById('course-sel').value = '';
-        bootstrap.Modal.getInstance(document.getElementById('addSubjectModal')).hide();
-        // TODO: await fetch('/api/subjects', { method:'POST', ... });
+
+        const res  = await fetch('/api/admin/subjects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mis, code, desc, lec, lab })
+        });
+        const data = await res.json();
+        if (data.success) {
+            subjects.push({ id: data.id, mis, code, desc, lec, lab });
+            renderSubjects();
+            document.getElementById('add-mis').value  = '';
+            document.getElementById('add-code').value = '';
+            document.getElementById('add-desc').value = '';
+            bootstrap.Modal.getInstance(document.getElementById('addSubjectModal')).hide();
+        } else {
+            alert('Error saving subject: ' + (data.error || 'Unknown error'));
+        }
     }
 
-    /* ══════════════════════════════
-       SUBJECTS OFFERED
-    ══════════════════════════════ */
+    function openEditSubject(idx) {
+        const s = subjects[idx];
+        document.getElementById('edit-subj-idx').value = idx;
+        document.getElementById('edit-mis').value  = s.mis;
+        document.getElementById('edit-code').value = s.code;
+        document.getElementById('edit-desc').value = s.desc;
+        document.getElementById('edit-lec').value  = s.lec;
+        document.getElementById('edit-lab').value  = s.lab;
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('editSubjectModal')).show();
+    }
+
+    async function saveEditSubject() {
+        const idx  = parseInt(document.getElementById('edit-subj-idx').value);
+        const mis  = document.getElementById('edit-mis').value.trim();
+        const code = document.getElementById('edit-code').value.trim();
+        const desc = document.getElementById('edit-desc').value.trim();
+        const lec  = parseInt(document.getElementById('edit-lec').value);
+        const lab  = parseInt(document.getElementById('edit-lab').value);
+        if (!mis || !code || !desc) { alert('Please fill in MIS Code, Subject Code, and Description.'); return; }
+
+        const id  = subjects[idx].id;
+        const res = await fetch(`/api/admin/subjects/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mis, code, desc, lec, lab })
+        });
+        const data = await res.json();
+        if (data.success) {
+            subjects[idx] = { ...subjects[idx], mis, code, desc, lec, lab };
+            renderSubjects();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('editSubjectModal')).hide();
+        } else {
+            alert('Error updating subject: ' + (data.error || 'Unknown error'));
+        }
+    }
+
+    /* ══ OFFERED ══ */
     function renderOffered() {
         const tbody = document.getElementById('offered-body');
         const empty = document.getElementById('offered-empty');
         tbody.innerHTML = '';
-        if (offered.length === 0) { empty.style.display = 'block'; updateStats(); return; }
+        if (!offered.length) { empty.style.display = 'block'; updateStats(); return; }
         empty.style.display = 'none';
         offered.forEach((s, i) => {
             const tr = document.createElement('tr');
-            tr.dataset.index = i;
             tr.innerHTML = `
                 <td style="color:var(--muted);">${escHtml(s.mis)}</td>
                 <td style="font-weight:600;">${escHtml(s.code)}</td>
@@ -570,18 +534,13 @@
                 <td style="text-align:center;">${s.lab}</td>
                 <td>
                     <div class="d-flex align-items-center gap-2">
-                        <div class="user-avatar-sm" style="background:#4299e1;font-size:11px;">${escHtml(s.inst.charAt(0))}</div>
-                        ${escHtml(s.inst)}
+                        <div class="user-avatar-sm" style="background:#4299e1;font-size:11px;">${escHtml((s.inst||'?').charAt(0))}</div>
+                        ${escHtml(s.inst || '—')}
                     </div>
                 </td>
                 <td>${statusBadge(s.active)}</td>
                 <td>
                     <div class="d-flex gap-2">
-                        <button style="background:transparent;color:#4299e1;border:1px solid #4299e1;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;"
-                            data-bs-toggle="modal" data-bs-target="#assignInstructorModal"
-                            onclick="setAssignRow(this)">
-                            <i class="fas fa-user-edit me-1"></i>Assign
-                        </button>
                         ${toggleBtn(s.active, i)}
                     </div>
                 </td>`;
@@ -600,41 +559,46 @@
         document.getElementById('offer-inst').value = '';
     }
 
-    function addToOffered() {
+    async function addToOffered() {
         if (!activePeriod) { alert('No active academic period. Please set one in Academic Management first.'); return; }
         const inst = document.getElementById('offer-inst').value;
-        if (!inst)  { alert('Please assign an instructor first.'); return; }
-        offered.push({
-            mis:    document.getElementById('offer-mis').value,
-            code:   document.getElementById('offer-code').value,
-            desc:   document.getElementById('offer-desc').value,
-            lec:    document.getElementById('offer-lec').value,
-            lab:    document.getElementById('offer-lab').value,
-            inst, active: true
+        if (!inst) { alert('Please assign an instructor first.'); return; }
+        const payload = {
+            mis:  document.getElementById('offer-mis').value,
+            code: document.getElementById('offer-code').value,
+            inst
+        };
+        const res  = await fetch('/api/admin/subject-offerings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
-        renderOffered();
-        bootstrap.Modal.getInstance(document.getElementById('offerSubjectModal')).hide();
-        // TODO: await fetch('/api/offered-subjects', { method:'POST', ... });
+        const data = await res.json();
+        if (data.success) {
+            const oRes = await fetch('/api/admin/subject-offerings');
+            offered    = await oRes.json();
+            renderOffered();
+            bootstrap.Modal.getInstance(document.getElementById('offerSubjectModal')).hide();
+        } else {
+            alert('Error: ' + (data.error || 'Could not offer subject'));
+        }
     }
 
-    function setAssignRow(btn) {
-        assignTargetRow = btn.closest('tr');
-    }
-
-    function saveAssignedInstructor() {
-        if (!assignTargetRow) return;
-        const selected = document.querySelector('input[name="assignedInstructor"]:checked');
-        if (!selected) { alert('Please select an instructor.'); return; }
-        const index = parseInt(assignTargetRow.dataset.index);
-        offered[index].inst = selected.value;
-        renderOffered();
-        assignTargetRow = null;
-    }
-
-    function toggleStatus(index, action) {
+    async function toggleStatus(index, action) {
         if (!confirm(`Are you sure you want to ${action} this subject?`)) return;
-        offered[index].active = action === 'activate';
-        renderOffered();
+        const id  = offered[index].id;
+        const res = await fetch(`/api/admin/subject-offerings/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ active: action === 'activate' })
+        });
+        const data = await res.json();
+        if (data.success) {
+            offered[index].active = action === 'activate';
+            renderOffered();
+        } else {
+            alert('Error updating status: ' + (data.error || 'Unknown error'));
+        }
     }
 
     function statusBadge(active) {
@@ -649,28 +613,21 @@
             : `<button style="background:#38a169;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;" onclick="toggleStatus(${index},'activate')"><i class="fas fa-check me-1"></i>Activate</button>`;
     }
 
-    /* ══════════════════════════════
-       COURSES
-    ══════════════════════════════ */
+    /* ══ COURSES ══ */
     function renderCourses() {
         const tbody = document.getElementById('course-tbody');
         const empty = document.getElementById('course-empty');
         tbody.innerHTML = '';
-        if (courses.length === 0) { empty.style.display = 'block'; updateStats(); syncCourseDropdown(); return; }
+        if (!courses.length) { empty.style.display = 'block'; updateStats(); syncCourseDropdown(); return; }
         empty.style.display = 'none';
         courses.forEach((c, i) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="color:var(--muted);">${String(i + 1).padStart(2,'00')}</td>
+                <td style="color:var(--muted);">${String(i + 1).padStart(2,'0')}</td>
                 <td><span style="background:rgba(66,153,225,0.15);color:#4299e1;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;">${escHtml(c.code)}</span></td>
                 <td style="font-weight:600;">${escHtml(c.name)}</td>
-                <td style="text-align:center;"><span style="background:rgba(56,161,105,0.12);color:#68d391;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">${c.sections.length}</span></td>
-                <td style="text-align:center;"><span style="background:rgba(66,153,225,0.12);color:#63b3ed;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">${c.irregulars.length}</span></td>
                 <td>
                     <div class="d-flex gap-2">
-                        <button onclick="openDetailPanel(${i})" style="background:rgba(56,161,105,0.15);color:#68d391;border:1px solid rgba(56,161,105,0.3);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;">
-                            <i class="fas fa-sitemap me-1"></i>Manage
-                        </button>
                         <button onclick="openEditCourse(${i})" style="background:#4299e1;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;">
                             <i class="fas fa-edit me-1"></i>Edit
                         </button>
@@ -685,21 +642,19 @@
         syncCourseDropdown();
     }
 
-    /* Sync course dropdown in Add Subject modal */
     function syncCourseDropdown() {
         const sel = document.getElementById('course-sel');
         const cur = sel.value;
         sel.innerHTML = '<option value="">Select Course</option>';
         courses.forEach(c => {
             const opt = document.createElement('option');
-            opt.value       = c.code;
+            opt.value = c.code;
             opt.textContent = `${c.code} — ${c.name}`;
             sel.appendChild(opt);
         });
         sel.value = cur;
     }
 
-    /* ══ Course modal ══ */
     function openCourseModal() {
         editingType = 'course'; editingIdx = null;
         document.getElementById('course-modal-title').innerHTML = '<i class="fas fa-graduation-cap me-2" style="color:#4299e1;"></i>Add Course';
@@ -719,198 +674,89 @@
 
     function closeCourseModal() { document.getElementById('course-modal').style.display = 'none'; }
 
-    function saveCourse() {
+    async function saveCourse() {
         const code = document.getElementById('course-code').value.trim();
         const name = document.getElementById('course-name').value.trim();
         if (!code || !name) { alert('Please fill in both Course Code and Program Name.'); return; }
+
         if (editingIdx !== null) {
-            courses[editingIdx].code = code;
-            courses[editingIdx].name = name;
-            if (activeCourseIdx === editingIdx)
-                document.getElementById('detail-course-label').textContent = `${code} — ${name}`;
+            const id  = courses[editingIdx].id;
+            const res = await fetch(`/api/admin/courses/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, name })
+            });
+            const data = await res.json();
+            if (data.success) {
+                courses[editingIdx].code = code;
+                courses[editingIdx].name = name;
+            }
         } else {
-            courses.push({ code, name, sections: [], irregulars: [] });
+            const res  = await fetch('/api/admin/courses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, name })
+            });
+            const data = await res.json();
+            if (data.success) courses.push({ id: data.id, code, name });
         }
         closeCourseModal();
         renderCourses();
-        // TODO: await fetch('/api/courses', { method: editingIdx !== null ? 'PUT' : 'POST', ... });
     }
 
-    /* ══ Detail panel ══ */
-    function openDetailPanel(idx) {
-        activeCourseIdx = idx;
-        const c = courses[idx];
-        document.getElementById('detail-course-label').textContent = `${c.code} — ${c.name}`;
-        document.getElementById('detail-panel').style.display = 'block';
-        setTimeout(() => document.getElementById('detail-panel').scrollIntoView({ behavior:'smooth', block:'start' }), 50);
-        renderSections();
-        renderIrregulars();
-    }
-
-    function closeDetailPanel() {
-        document.getElementById('detail-panel').style.display = 'none';
-        activeCourseIdx = null;
-    }
-
-    /* ══ Sections ══ */
-    function renderSections() {
-        const tbody = document.getElementById('section-tbody');
-        const empty = document.getElementById('section-empty');
-        tbody.innerHTML = '';
-        const c = courses[activeCourseIdx];
-        if (!c || c.sections.length === 0) { empty.style.display = 'block'; return; }
-        empty.style.display = 'none';
-        c.sections.forEach((s, i) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="color:var(--muted);">${String(i+1).padStart(2,'0')}</td>
-                <td style="font-weight:600;">${escHtml(s.name)}</td>
-                <td style="color:var(--muted);">${escHtml(s.year)}</td>
-                <td>
-                    <div class="d-flex gap-2">
-                        <button onclick="openEditSection(${i})" style="background:#4299e1;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;"><i class="fas fa-edit me-1"></i>Edit</button>
-                        <button onclick="openDeleteModal('section',${activeCourseIdx},${i})" style="background:#e53e3e;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;"><i class="fas fa-trash me-1"></i>Delete</button>
-                    </div>
-                </td>`;
-            tbody.appendChild(tr);
-        });
-        updateStats();
-    }
-
-    function openSectionModal() {
-        editingType = 'section'; editingIdx = null;
-        document.getElementById('section-modal-title').innerHTML = '<i class="fas fa-layer-group me-2" style="color:#38a169;"></i>Add Section';
-        document.getElementById('section-name').value = '';
-        document.getElementById('section-year').value = '1st Year';
-        document.getElementById('section-modal').style.display = 'flex';
-    }
-
-    function openEditSection(idx) {
-        editingType = 'section'; editingIdx = idx;
-        const s = courses[activeCourseIdx].sections[idx];
-        document.getElementById('section-modal-title').innerHTML = '<i class="fas fa-edit me-2" style="color:#38a169;"></i>Edit Section';
-        document.getElementById('section-name').value = s.name;
-        document.getElementById('section-year').value = s.year;
-        document.getElementById('section-modal').style.display = 'flex';
-    }
-
-    function closeSectionModal() { document.getElementById('section-modal').style.display = 'none'; }
-
-    function saveSection() {
-        const name = document.getElementById('section-name').value.trim();
-        const year = document.getElementById('section-year').value;
-        if (!name) { alert('Please enter a section name.'); return; }
-        const c = courses[activeCourseIdx];
-        if (editingIdx !== null) { c.sections[editingIdx] = { name, year }; }
-        else { c.sections.push({ name, year }); }
-        closeSectionModal();
-        renderSections();
-        renderCourses();
-        // TODO: await fetch(`/api/courses/${c.id}/sections`, { method: editingIdx !== null ? 'PUT' : 'POST', ... });
-    }
-
-    /* ══ Irregulars ══ */
-    function renderIrregulars() {
-        const tbody = document.getElementById('irregular-tbody');
-        const empty = document.getElementById('irregular-empty');
-        tbody.innerHTML = '';
-        const c = courses[activeCourseIdx];
-        if (!c || c.irregulars.length === 0) { empty.style.display = 'block'; return; }
-        empty.style.display = 'none';
-        c.irregulars.forEach((g, i) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="color:var(--muted);">${String(i+1).padStart(2,'0')}</td>
-                <td style="font-weight:600;">${escHtml(g.name)}</td>
-                <td>
-                    <div class="d-flex gap-2">
-                        <button onclick="openEditIrregular(${i})" style="background:#4299e1;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;"><i class="fas fa-edit me-1"></i>Edit</button>
-                        <button onclick="openDeleteModal('irregular',${activeCourseIdx},${i})" style="background:#e53e3e;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;"><i class="fas fa-trash me-1"></i>Delete</button>
-                    </div>
-                </td>`;
-            tbody.appendChild(tr);
-        });
-        updateStats();
-    }
-
-    function openIrregularModal() {
-        editingType = 'irregular'; editingIdx = null;
-        document.getElementById('irregular-modal-title').innerHTML = '<i class="fas fa-users-cog me-2" style="color:#4299e1;"></i>Add Irregular Group';
-        document.getElementById('irregular-name').value = '';
-        document.getElementById('irregular-modal').style.display = 'flex';
-    }
-
-    function openEditIrregular(idx) {
-        editingType = 'irregular'; editingIdx = idx;
-        const g = courses[activeCourseIdx].irregulars[idx];
-        document.getElementById('irregular-modal-title').innerHTML = '<i class="fas fa-edit me-2" style="color:#4299e1;"></i>Edit Irregular Group';
-        document.getElementById('irregular-name').value = g.name;
-        document.getElementById('irregular-modal').style.display = 'flex';
-    }
-
-    function closeIrregularModal() { document.getElementById('irregular-modal').style.display = 'none'; }
-
-    function saveIrregular() {
-        const name = document.getElementById('irregular-name').value.trim();
-        if (!name) { alert('Please enter a group name.'); return; }
-        const c = courses[activeCourseIdx];
-        if (editingIdx !== null) { c.irregulars[editingIdx] = { name }; }
-        else { c.irregulars.push({ name }); }
-        closeIrregularModal();
-        renderIrregulars();
-        renderCourses();
-        // TODO: await fetch(`/api/courses/${c.id}/irregulars`, { method: editingIdx !== null ? 'PUT' : 'POST', ... });
-    }
-
-    /* ══ Shared delete modal ══ */
-    function openDeleteModal(type, courseIdx, itemIdx = null) {
-        deleteTarget = { type, courseIdx, itemIdx };
-        const titles = { course:'Delete Course?', section:'Delete Section?', irregular:'Delete Irregular Group?', subject:'Delete Subject?' };
-        const bodies  = {
-            course:    'Deleting this course will also remove all its sections and irregular groups. This cannot be undone.',
-            section:   'This section will be permanently removed.',
-            irregular: 'This irregular group will be permanently removed.',
-            subject:   'This subject will be permanently removed.'
+    /* ══ DELETE MODAL ══ */
+    function openDeleteModal(type, idx) {
+        deleteTarget = { type, idx };
+        const titles = { course: 'Delete Course?', subject: 'Delete Subject?' };
+        const bodies = {
+            course:  'This course will be permanently removed. This cannot be undone.',
+            subject: 'This subject will be permanently removed. This cannot be undone.'
         };
         document.getElementById('delete-modal-title').textContent = titles[type];
         document.getElementById('delete-modal-body').textContent  = bodies[type];
         document.getElementById('delete-modal').style.display     = 'flex';
     }
 
-    function closeDeleteModal() { document.getElementById('delete-modal').style.display = 'none'; deleteTarget = null; }
-
-    function confirmDelete() {
-        const { type, courseIdx, itemIdx } = deleteTarget;
-        if (type === 'course') {
-            courses.splice(courseIdx, 1);
-            if (activeCourseIdx === courseIdx) closeDetailPanel();
-            renderCourses();
-        } else if (type === 'section') {
-            courses[courseIdx].sections.splice(itemIdx, 1);
-            renderSections(); renderCourses();
-        } else if (type === 'irregular') {
-            courses[courseIdx].irregulars.splice(itemIdx, 1);
-            renderIrregulars(); renderCourses();
-        } else if (type === 'subject') {
-            subjects.splice(itemIdx, 1);
-            renderSubjects();
-        }
-        closeDeleteModal();
-        // TODO: await fetch(`/api/...`, { method:'DELETE' });
+    function closeDeleteModal() {
+        document.getElementById('delete-modal').style.display = 'none';
+        deleteTarget = null;
     }
 
-    /* ══ Backdrop close ══ */
-    ['course-modal','section-modal','irregular-modal','delete-modal'].forEach(id => {
+    async function confirmDelete() {
+        const { type, idx } = deleteTarget;
+
+        if (type === 'subject') {
+            const id  = subjects[idx].id;
+            const res = await fetch(`/api/admin/subjects/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                subjects.splice(idx, 1);
+                renderSubjects();
+            } else {
+                alert('Error deleting subject: ' + (data.error || 'Unknown error'));
+            }
+        } else if (type === 'course') {
+            const id  = courses[idx].id;
+            const res = await fetch(`/api/admin/courses/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                courses.splice(idx, 1);
+                renderCourses();
+            } else {
+                alert('Error deleting course: ' + (data.error || 'Unknown error'));
+            }
+        }
+        closeDeleteModal();
+    }
+
+    ['course-modal', 'delete-modal'].forEach(id => {
         document.getElementById(id).addEventListener('click', function(e) {
             if (e.target !== this) return;
-            if (id === 'course-modal')    closeCourseModal();
-            if (id === 'section-modal')   closeSectionModal();
-            if (id === 'irregular-modal') closeIrregularModal();
-            if (id === 'delete-modal')    closeDeleteModal();
+            if (id === 'course-modal') closeCourseModal();
+            if (id === 'delete-modal') closeDeleteModal();
         });
     });
 
-    /* ══ Search filter ══ */
     function filterTable(input, id) {
         const q = input.value.toLowerCase();
         document.querySelectorAll('#' + id + ' tbody tr').forEach(r =>
@@ -922,10 +768,6 @@
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // Initial render
-    updatePeriodBars();
-    renderSubjects();
-    renderOffered();
-    renderCourses();
+    init();
 </script>
 }
