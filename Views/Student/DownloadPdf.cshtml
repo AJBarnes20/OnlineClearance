@@ -102,7 +102,12 @@
                             <td style="padding:6px 10px;">@row.InstructorName</td>
                             <td style="padding:6px 10px;text-align:center;
                                        border-bottom:1px solid #333;min-width:100px;">
-                                @if (row.Status == "Cleared")
+                                @if (row.Status == "Cleared" && !string.IsNullOrEmpty(row.SignatureBase64))
+                                {
+                                    <img src="@row.SignatureBase64"
+                                         style="max-height:40px;max-width:90px;object-fit:contain;" />
+                                }
+                                else if (row.Status == "Cleared")
                                 {
                                     <span style="color:#28a745;font-weight:700;">✔</span>
                                 }
@@ -151,7 +156,12 @@
                             <td style="padding:6px 10px;">@row.PersonName</td>
                             <td style="padding:6px 10px;text-align:center;
                                        border-bottom:1px solid #333;min-width:100px;">
-                                @if (row.Status == "Cleared")
+                                @if (row.Status == "Cleared" && !string.IsNullOrEmpty(row.SignatureBase64))
+                                {
+                                    <img src="@row.SignatureBase64"
+                                         style="max-height:40px;max-width:90px;object-fit:contain;" />
+                                }
+                                else if (row.Status == "Cleared")
                                 {
                                     <span style="color:#28a745;font-weight:700;">✔</span>
                                 }

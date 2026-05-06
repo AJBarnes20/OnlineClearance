@@ -195,7 +195,7 @@ namespace OnlineClearanceSystem.Controllers
 
                 if (string.IsNullOrEmpty(studentNumber))
                 {
-                    TempData["Error"] = "Student record not found. Please contact the Admin.";
+                    TempData["Error"] = "Student record not found.";
                     return RedirectToAction(nameof(SubjectsOffered));
                 }
 
@@ -203,7 +203,6 @@ namespace OnlineClearanceSystem.Controllers
                     "SELECT id FROM academic_periods WHERE is_active = 1 LIMIT 1", conn);
                 var periodId = Convert.ToInt32(periodCmd.ExecuteScalar() ?? 1);
 
-                // Delete previous selections for this student + period
                 var deleteCmd = new MySqlCommand(@"
                     DELETE FROM clearance_subjects
                     WHERE student_number = @sn AND period_id = @pid", conn);
@@ -211,7 +210,6 @@ namespace OnlineClearanceSystem.Controllers
                 deleteCmd.Parameters.AddWithValue("@pid", periodId);
                 deleteCmd.ExecuteNonQuery();
 
-                // Insert new selections
                 var codes = selectedSubjects.Split(',',
                     StringSplitOptions.RemoveEmptyEntries);
 
@@ -324,7 +322,6 @@ namespace OnlineClearanceSystem.Controllers
                     "SELECT id FROM academic_periods WHERE is_active = 1 LIMIT 1", conn);
                 var periodId = Convert.ToInt32(periodCmd.ExecuteScalar() ?? 1);
 
-                // Upsert — never downgrade an already-Cleared (status=2) row
                 var upsertCmd = new MySqlCommand(@"
                     INSERT INTO clearance_subjects
                         (student_number, mis_code, status, period_id)
@@ -427,7 +424,7 @@ namespace OnlineClearanceSystem.Controllers
                 using var conn = DbHelper.GetConnection(_config);
                 conn.Open();
 
-                // Load available courses for the dropdown
+                // ── Load available courses ────────────────────
                 var coursesCmd = new MySqlCommand(
                     "SELECT course_code FROM courses ORDER BY course_code", conn);
                 using var cr = coursesCmd.ExecuteReader();
@@ -435,19 +432,21 @@ namespace OnlineClearanceSystem.Controllers
                     model.AvailableCourses.Add(cr.GetString("course_code"));
                 cr.Close();
 
+                // ── Load user + student info ──────────────────
                 var cmd = new MySqlCommand(@"
                     SELECT
                         u.first_name, u.middle_initial,
-                        u.last_name, u.suffix_name, u.email,
+                        u.last_name,  u.suffix_name, u.email,
                         u.id_number,
                         s.student_number,
+                        s.curriculum_id,
                         c.course_code,
                         cu.year_level,
                         cu.section
                     FROM users u
                     LEFT JOIN students   s  ON s.user_id  = u.id
-                    LEFT JOIN curriculum cu ON cu.id       = s.curriculum_id
-                    LEFT JOIN courses    c  ON c.id        = cu.course_id
+                    LEFT JOIN curriculum cu ON cu.id      = s.curriculum_id
+                    LEFT JOIN courses    c  ON c.id       = cu.course_id
                     WHERE u.id = @uid LIMIT 1", conn);
                 cmd.Parameters.AddWithValue("@uid", userId);
 
@@ -458,19 +457,16 @@ namespace OnlineClearanceSystem.Controllers
                                         ? null : r.GetString("student_number");
                     var idNumber   = r.IsDBNull(r.GetOrdinal("id_number"))
                                         ? null : r.GetString("id_number");
+
                     model.StudentId     = studentNum ?? idNumber ?? "";
-                    model.FirstName     = r.IsDBNull(r.GetOrdinal("first_name"))
-                                            ? "" : r.GetString("first_name");
-                    model.MiddleInitial = r.IsDBNull(r.GetOrdinal("middle_initial"))
-                                            ? "" : r.GetString("middle_initial");
-                    model.LastName      = r.IsDBNull(r.GetOrdinal("last_name"))
-                                            ? "" : r.GetString("last_name");
-                    model.Suffix        = r.IsDBNull(r.GetOrdinal("suffix_name"))
-                                            ? "" : r.GetString("suffix_name");
-                    model.Email      = r.IsDBNull(r.GetOrdinal("email"))
-                                            ? "" : r.GetString("email");
-                    model.Course        = r.IsDBNull(r.GetOrdinal("course_code"))
-                                            ? "" : r.GetString("course_code");
+                    model.FirstName     = r.IsDBNull(r.GetOrdinal("first_name"))     ? "" : r.GetString("first_name");
+                    model.MiddleInitial = r.IsDBNull(r.GetOrdinal("middle_initial")) ? "" : r.GetString("middle_initial");
+                    model.LastName      = r.IsDBNull(r.GetOrdinal("last_name"))      ? "" : r.GetString("last_name");
+                    model.Suffix        = r.IsDBNull(r.GetOrdinal("suffix_name"))    ? "" : r.GetString("suffix_name");
+                    model.Email         = r.IsDBNull(r.GetOrdinal("email"))          ? "" : r.GetString("email");
+                    model.Course        = r.IsDBNull(r.GetOrdinal("course_code"))    ? "" : r.GetString("course_code");
+                    model.Section       = r.IsDBNull(r.GetOrdinal("section"))        ? "" : r.GetString("section");
+                    model.Password      = "";
 
                     if (!r.IsDBNull(r.GetOrdinal("year_level")))
                     {
@@ -482,29 +478,41 @@ namespace OnlineClearanceSystem.Controllers
                             _ => "4th Year"
                         };
                     }
-
-                    model.Section  = r.IsDBNull(r.GetOrdinal("section"))
-                                        ? "" : r.GetString("section");
-                    model.Password = "";
                 }
                 r.Close();
 
-                // Load student org positions + saved signature
-                var posCmd = new MySqlCommand(
-                    "SELECT position, signature_data FROM student_signatories WHERE user_id = @uid ORDER BY id", conn);
+                // ── Load org positions from student_signatories
+                var posCmd = new MySqlCommand(@"
+                    SELECT position
+                    FROM student_signatories
+                    WHERE user_id = @uid
+                    ORDER BY id", conn);
                 posCmd.Parameters.AddWithValue("@uid", userId);
+
                 using var pr = posCmd.ExecuteReader();
                 while (pr.Read())
                 {
                     model.Positions.Add(new OrganizationSignatory
                     {
+                        OrgName    = "",
                         OrgRole    = pr.IsDBNull(pr.GetOrdinal("position")) ? "" : pr.GetString("position"),
                         PersonName = "",
                         Status     = ""
                     });
-                    if (model.SignaturePath == null && !pr.IsDBNull(pr.GetOrdinal("signature_data")))
-                        model.SignaturePath = pr.GetString("signature_data");
                 }
+                pr.Close();
+
+                // ── Load saved signature ──────────────────────
+                var signatureCmd = new MySqlCommand(@"
+                    SELECT signature_data
+                    FROM student_signatories
+                    WHERE user_id = @uid
+                    AND signature_data IS NOT NULL
+                    LIMIT 1", conn);
+                signatureCmd.Parameters.AddWithValue("@uid", userId);
+                var signatureResult = signatureCmd.ExecuteScalar();
+                if (signatureResult != null && signatureResult != DBNull.Value)
+                    model.SignaturePath = signatureResult.ToString();
             }
             catch (Exception ex)
             {
@@ -527,7 +535,6 @@ namespace OnlineClearanceSystem.Controllers
                 using var conn = DbHelper.GetConnection(_config);
                 conn.Open();
 
-                // Save user fields
                 if (!string.IsNullOrWhiteSpace(model.Password))
                 {
                     var hash = BCrypt.Net.BCrypt.HashPassword(model.Password);
@@ -535,13 +542,13 @@ namespace OnlineClearanceSystem.Controllers
                         UPDATE users SET
                             first_name = @fn, middle_initial = @mi,
                             last_name  = @ln, suffix_name    = @sx,
-                            email   = @em, password       = @pw
+                            email      = @em, password       = @pw
                         WHERE id = @id", conn);
                     cmd.Parameters.AddWithValue("@fn", model.FirstName?.Trim()     ?? "");
                     cmd.Parameters.AddWithValue("@mi", model.MiddleInitial?.Trim() ?? "");
                     cmd.Parameters.AddWithValue("@ln", model.LastName?.Trim()      ?? "");
                     cmd.Parameters.AddWithValue("@sx", model.Suffix?.Trim()        ?? "");
-                    cmd.Parameters.AddWithValue("@un", model.Email?.Trim()      ?? "");
+                    cmd.Parameters.AddWithValue("@em", model.Email?.Trim()         ?? "");
                     cmd.Parameters.AddWithValue("@pw", hash);
                     cmd.Parameters.AddWithValue("@id", userId);
                     cmd.ExecuteNonQuery();
@@ -552,18 +559,17 @@ namespace OnlineClearanceSystem.Controllers
                         UPDATE users SET
                             first_name = @fn, middle_initial = @mi,
                             last_name  = @ln, suffix_name    = @sx,
-                            email   = @em
+                            email      = @em
                         WHERE id = @id", conn);
                     cmd.Parameters.AddWithValue("@fn", model.FirstName?.Trim()     ?? "");
                     cmd.Parameters.AddWithValue("@mi", model.MiddleInitial?.Trim() ?? "");
                     cmd.Parameters.AddWithValue("@ln", model.LastName?.Trim()      ?? "");
                     cmd.Parameters.AddWithValue("@sx", model.Suffix?.Trim()        ?? "");
-                    cmd.Parameters.AddWithValue("@em", model.Email?.Trim()      ?? "");
+                    cmd.Parameters.AddWithValue("@em", model.Email?.Trim()         ?? "");
                     cmd.Parameters.AddWithValue("@id", userId);
                     cmd.ExecuteNonQuery();
                 }
 
-                // Save student number + curriculum
                 var studentNumber = model.StudentId?.Trim() ?? "";
                 var courseCode    = model.Course?.Trim()    ?? "";
                 var section       = model.Section?.Trim()   ?? "";
@@ -580,7 +586,7 @@ namespace OnlineClearanceSystem.Controllers
                 if (!string.IsNullOrEmpty(courseCode) && yearInt > 0)
                 {
                     var courseCmd = new MySqlCommand(
-                        "SELECT id FROM courses WHERE course_code=@c LIMIT 1", conn);
+                        "SELECT id FROM courses WHERE course_code = @c LIMIT 1", conn);
                     courseCmd.Parameters.AddWithValue("@c", courseCode);
                     var courseId = Convert.ToInt32(courseCmd.ExecuteScalar() ?? 0);
 
@@ -588,7 +594,7 @@ namespace OnlineClearanceSystem.Controllers
                     {
                         var findCmd = new MySqlCommand(@"
                             SELECT id FROM curriculum
-                            WHERE course_id=@cid AND year_level=@yl AND section=@sec LIMIT 1", conn);
+                            WHERE course_id = @cid AND year_level = @yl AND section = @sec LIMIT 1", conn);
                         findCmd.Parameters.AddWithValue("@cid", courseId);
                         findCmd.Parameters.AddWithValue("@yl",  yearInt);
                         findCmd.Parameters.AddWithValue("@sec", section);
@@ -612,7 +618,6 @@ namespace OnlineClearanceSystem.Controllers
                     }
                 }
 
-                // Ensure students row exists, then update it
                 var ensureCmd = new MySqlCommand(@"
                     INSERT IGNORE INTO students (user_id, student_number)
                     VALUES (@uid, @sn)", conn);
@@ -627,7 +632,7 @@ namespace OnlineClearanceSystem.Controllers
                     WHERE user_id = @uid", conn);
                 updateStuCmd.Parameters.AddWithValue("@sn",  studentNumber);
                 updateStuCmd.Parameters.AddWithValue("@cid",
-                    curriculumId > 0 ? curriculumId : DBNull.Value);
+                    curriculumId > 0 ? (object)curriculumId : DBNull.Value);
                 updateStuCmd.Parameters.AddWithValue("@uid", userId);
                 updateStuCmd.ExecuteNonQuery();
 
@@ -652,11 +657,16 @@ namespace OnlineClearanceSystem.Controllers
             {
                 using var conn = DbHelper.GetConnection(_config);
                 conn.Open();
-                var cmd = new MySqlCommand(
-                    "UPDATE student_signatories SET signature_data = @sd WHERE user_id = @uid", conn);
-                cmd.Parameters.AddWithValue("@sd", dto.SignatureData ?? "");
+
+                // Check if student_signatories has signature_data column
+                var cmd = new MySqlCommand(@"
+                    UPDATE student_signatories
+                    SET signature_data = @sd
+                    WHERE user_id = @uid", conn);
+                cmd.Parameters.AddWithValue("@sd",  dto.SignatureData ?? "");
                 cmd.Parameters.AddWithValue("@uid", userId);
                 cmd.ExecuteNonQuery();
+
                 return Json(new { success = true });
             }
             catch (Exception ex)
@@ -687,23 +697,19 @@ namespace OnlineClearanceSystem.Controllers
                         cu.year_level
                     FROM users u
                     LEFT JOIN students   s  ON s.user_id  = u.id
-                    LEFT JOIN curriculum cu ON cu.id       = s.curriculum_id
-                    LEFT JOIN courses    c  ON c.id        = cu.course_id
+                    LEFT JOIN curriculum cu ON cu.id      = s.curriculum_id
+                    LEFT JOIN courses    c  ON c.id       = cu.course_id
                     WHERE u.id = @uid LIMIT 1", conn);
                 infoCmd.Parameters.AddWithValue("@uid", userId);
 
                 using var ir = infoCmd.ExecuteReader();
                 if (ir.Read())
                 {
-                    model.StudentName = ir.IsDBNull(ir.GetOrdinal("full_name"))
-                                        ? "" : ir.GetString("full_name");
-                    model.StudentId   = ir.IsDBNull(ir.GetOrdinal("student_number"))
-                                        ? "" : ir.GetString("student_number");
+                    model.StudentName = ir.IsDBNull(ir.GetOrdinal("full_name"))      ? "" : ir.GetString("full_name");
+                    model.StudentId   = ir.IsDBNull(ir.GetOrdinal("student_number")) ? "" : ir.GetString("student_number");
 
-                    var course  = ir.IsDBNull(ir.GetOrdinal("course_code"))
-                                    ? "" : ir.GetString("course_code");
-                    var yl      = ir.IsDBNull(ir.GetOrdinal("year_level"))
-                                    ? 0  : ir.GetInt32("year_level");
+                    var course  = ir.IsDBNull(ir.GetOrdinal("course_code")) ? "" : ir.GetString("course_code");
+                    var yl      = ir.IsDBNull(ir.GetOrdinal("year_level"))  ? 0  : ir.GetInt32("year_level");
                     var ylLabel = yl switch
                     {
                         1 => "1st Year", 2 => "2nd Year",
@@ -734,7 +740,8 @@ namespace OnlineClearanceSystem.Controllers
                             CONCAT(u.first_name, ' ', u.last_name),
                             'TBA'
                         )                                               AS InstructorName,
-                        COALESCE(st.label, 'Pending')                   AS Status
+                        COALESCE(st.label, 'Pending')                   AS Status,
+                        COALESCE(sig.signature_data, '')                AS SignatureBase64
                     FROM clearance_subjects cs
                     LEFT JOIN subject_offerings  so  ON so.mis_code     = cs.mis_code
                     LEFT JOIN subjects           s   ON s.subject_code  = so.subject_code
@@ -750,11 +757,12 @@ namespace OnlineClearanceSystem.Controllers
                 {
                     model.Subjects.Add(new PdfSubjectItem
                     {
-                        MisCode        = sr.GetString("MisCode"),
-                        SubjectCode    = sr.GetString("SubjectCode"),
-                        Description    = sr.GetString("Description"),
-                        InstructorName = sr.GetString("InstructorName"),
-                        Status         = sr.GetString("Status")
+                        MisCode         = sr.GetString("MisCode"),
+                        SubjectCode     = sr.GetString("SubjectCode"),
+                        Description     = sr.GetString("Description"),
+                        InstructorName  = sr.GetString("InstructorName"),
+                        Status          = sr.GetString("Status"),
+                        SignatureBase64 = sr.GetString("SignatureBase64")
                     });
                 }
                 sr.Close();
@@ -766,14 +774,16 @@ namespace OnlineClearanceSystem.Controllers
 
                 var orgCmd = new MySqlCommand(@"
                     SELECT
-                        o.position_title               AS Role,
-                        o.org_signatory                AS PersonName,
-                        COALESCE(st.label, 'None')     AS Status
+                        o.position_title                 AS Role,
+                        o.org_signatory                  AS PersonName,
+                        COALESCE(st.label, 'None')       AS Status,
+                        COALESCE(sig.signature_data, '') AS SignatureBase64
                     FROM organizations o
                     LEFT JOIN clearance_organization co
                            ON co.org_name       = o.org_name
                           AND co.student_number = @sn
-                    LEFT JOIN status_table st ON st.id = co.status
+                    LEFT JOIN status_table st  ON st.id           = co.status
+                    LEFT JOIN signatories  sig ON sig.employee_id = o.org_signatory
                     WHERE o.curriculum_id = @cid
                     ORDER BY o.id", conn);
                 orgCmd.Parameters.AddWithValue("@sn",  studentNumber);
@@ -784,11 +794,10 @@ namespace OnlineClearanceSystem.Controllers
                 {
                     model.Organizations.Add(new PdfOrganizationItem
                     {
-                        Role       = or2.IsDBNull(or2.GetOrdinal("Role"))
-                                        ? "—" : or2.GetString("Role"),
-                        PersonName = or2.IsDBNull(or2.GetOrdinal("PersonName"))
-                                        ? "—" : or2.GetString("PersonName"),
-                        Status     = or2.GetString("Status")
+                        Role            = or2.IsDBNull(or2.GetOrdinal("Role"))            ? "—" : or2.GetString("Role"),
+                        PersonName      = or2.IsDBNull(or2.GetOrdinal("PersonName"))      ? "—" : or2.GetString("PersonName"),
+                        Status          = or2.GetString("Status"),
+                        SignatureBase64 = or2.IsDBNull(or2.GetOrdinal("SignatureBase64")) ? ""  : or2.GetString("SignatureBase64")
                     });
                 }
             }
@@ -807,7 +816,7 @@ namespace OnlineClearanceSystem.Controllers
             var lastName    = User.FindFirst("LastName")?.Value  ?? "";
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0";
 
-            ViewData["Email"]    = $"{firstName} {lastName}".Trim();
+            ViewData["Email"]       = $"{firstName} {lastName}".Trim();
             ViewData["UserId"]      = "—";
             ViewData["UserCourse"]  = "—";
             ViewData["UserYear"]    = "—";
@@ -828,18 +837,16 @@ namespace OnlineClearanceSystem.Controllers
                         cu.section
                     FROM users u
                     LEFT JOIN students   s  ON s.user_id  = u.id
-                    LEFT JOIN curriculum cu ON cu.id       = s.curriculum_id
-                    LEFT JOIN courses    c  ON c.id        = cu.course_id
+                    LEFT JOIN curriculum cu ON cu.id      = s.curriculum_id
+                    LEFT JOIN courses    c  ON c.id       = cu.course_id
                     WHERE u.id = @uid LIMIT 1", conn);
                 cmd.Parameters.AddWithValue("@uid", uid);
 
                 using var r = cmd.ExecuteReader();
                 if (r.Read())
                 {
-                    var studentNum = r.IsDBNull(r.GetOrdinal("student_number"))
-                                        ? null : r.GetString("student_number");
-                    var idNumber   = r.IsDBNull(r.GetOrdinal("id_number"))
-                                        ? null : r.GetString("id_number");
+                    var studentNum = r.IsDBNull(r.GetOrdinal("student_number")) ? null : r.GetString("student_number");
+                    var idNumber   = r.IsDBNull(r.GetOrdinal("id_number"))      ? null : r.GetString("id_number");
                     ViewData["UserId"] = studentNum ?? idNumber ?? "—";
 
                     ViewData["UserCourse"] = r.IsDBNull(r.GetOrdinal("course_code"))
@@ -874,10 +881,5 @@ namespace OnlineClearanceSystem.Controllers
     public class RequestOrgDto
     {
         public string? OrgName { get; set; }
-    }
-
-    public class SaveSignatureDto
-    {
-        public string? SignatureData { get; set; }
     }
 }

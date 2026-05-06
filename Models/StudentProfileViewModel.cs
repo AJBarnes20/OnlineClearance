@@ -10,22 +10,16 @@ namespace OnlineClearanceSystem.Models
         public string Course        { get; set; } = "";
         public string YearLevel     { get; set; } = "";
         public string Section       { get; set; } = "";
-        public string Email     { get; set; } = "";
+        public string Email         { get; set; } = "";
         public string Password      { get; set; } = "";
-
         public List<string> AvailableCourses { get; set; } = [];
+        public string? SignaturePath { get; set; }
+        public List<OrganizationSignatory> Positions { get; set; } = new();
 
-        // Computed
         public string FullName =>
             $"{FirstName} {(string.IsNullOrEmpty(MiddleInitial) ? "" : MiddleInitial + ". ")}{LastName} {Suffix}".Trim();
-
-        // Signature: relative web path stored in signatories.uploaded_signature_path
-        // Null = no signature on file yet → view shows "Not yet saved"
-        public string? SignaturePath { get; set; }
-
-        // Positions from organizations table matched by curriculum_id.
-        // Empty list = student has no assigned org position →
-        // the entire E-Signature + Assigned Organization section is hidden in the view.
-        public List<OrganizationSignatory> Positions { get; set; } = new();
     }
+
+    // ← This is what was missing
+     
 }

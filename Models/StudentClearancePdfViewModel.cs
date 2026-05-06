@@ -10,19 +10,21 @@ namespace OnlineClearanceSystem.Models
         public List<PdfOrganizationItem> Organizations { get; set; } = new();
     }
 
-    public class PdfSubjectItem
-    {
-        public string MisCode        { get; set; } = "";
-        public string SubjectCode    { get; set; } = "";
-        public string Description    { get; set; } = "";
-        public string InstructorName { get; set; } = "";
-        public string Status         { get; set; } = "";
-    }
+   public class PdfSubjectItem
+{
+    public string MisCode        { get; set; } = "";
+    public string SubjectCode    { get; set; } = "";
+    public string Description    { get; set; } = "";
+    public string InstructorName { get; set; } = "";
+    public string Status         { get; set; } = "";
+    public string SignatureBase64 { get; set; } = ""; // ← ADD
+}
 
-    public class PdfOrganizationItem
-    {
-        public string Role       { get; set; } = "";
-        public string PersonName { get; set; } = "";
-        public string Status     { get; set; } = "";
-    }
+public class PdfOrganizationItem
+{
+    public string Role            { get; set; } = "";
+    public string PersonName      { get; set; } = "";
+    public string Status          { get; set; } = "";
+    public string SignatureBase64 { get; set; } = ""; // ← ADD
+}
 }

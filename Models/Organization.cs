@@ -20,4 +20,6 @@ namespace OnlineClearanceSystem.Models
         // Navigation
         public ICollection<Signatory> Signatories { get; set; } = new List<Signatory>();
     }
+
+    
 }
